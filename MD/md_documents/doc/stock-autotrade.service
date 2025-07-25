@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve stock-autotrade
+After=network.target
+
+[Service]
+User=stock
+Group=stock
+WorkingDirectory=/home/stock/public_html
+ExecStart=/home/stock/public_html/venv/bin/gunicorn --workers 3 --bind unix:stock-autotrade.sock -m 007 wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,79 @@
+2025-07-25 09:54:46,979 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 09:54:47,088 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 09:54:47,088 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 09:54:47,099 - ERROR - 로그인 실패: 토큰 인증에 실패했습니다. 접속을 종료합니다 [CODE=8031, MESSAGE=투자구분(실전/모의)이 달라서 Token를 사용할수가 없습니다]
+2025-07-25 09:54:47,100 - INFO - WebSocket 서버와 연결을 종료했습니다.
+2025-07-25 09:54:47,100 - INFO - 클라이언트 실행을 종료합니다.
+2025-07-25 09:58:12,750 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 09:58:12,904 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 09:58:12,904 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 09:58:12,968 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 09:58:12,969 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "073", "search_type": "1", "stex_tp": "K"}
+2025-07-25 09:58:22,978 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 09:58:42,932 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 09:59:02,930 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 09:59:22,947 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 09:59:42,959 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:00:06,239 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 10:00:06,347 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 10:00:06,347 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 10:00:06,382 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 10:00:06,382 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "073", "search_type": "1", "stex_tp": "K"}
+2025-07-25 10:00:16,392 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:00:36,377 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:00:56,390 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:01:16,399 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:01:36,407 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:01:56,414 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:02:16,427 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:02:36,438 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:02:56,451 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:03:16,458 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:03:36,467 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:03:56,480 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:05:47,915 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 10:05:48,024 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 10:05:48,024 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 10:05:48,057 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 10:05:48,058 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "073", "search_type": "1", "stex_tp": "K"}
+2025-07-25 10:05:58,068 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:06:18,055 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:06:38,065 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:06:58,075 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:07:14,168 - INFO - WebSocket 서버와 연결을 종료했습니다.
+2025-07-25 10:19:13,035 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 10:19:13,141 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 10:19:13,141 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 10:19:13,184 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 10:19:13,184 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "76", "search_type": "1", "stex_tp": "K"}
+2025-07-25 10:19:23,194 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:19:43,162 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:20:03,170 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:20:23,178 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:20:33,186 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:20:43,196 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:20:59,538 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 10:20:59,647 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 10:20:59,647 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 10:20:59,682 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 10:20:59,682 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "76", "search_type": "1", "stex_tp": "K"}
+2025-07-25 10:21:09,692 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:21:29,677 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:21:49,689 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:22:09,699 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 10:22:12,491 - INFO - WebSocket 서버와 연결을 종료했습니다.
+2025-07-25 11:41:08,368 - INFO - 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+2025-07-25 11:41:08,477 - INFO - WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+2025-07-25 11:41:08,478 - INFO - 패킷 전송 완료: {"trnm": "LOGIN", "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"}
+2025-07-25 11:41:08,506 - INFO - 로그인 성공. 조건검색을 요청합니다.
+2025-07-25 11:41:08,507 - INFO - 패킷 전송 완료: {"trnm": "CNSRREQ", "seq": "67", "search_type": "1", "stex_tp": "K"}
+2025-07-25 11:41:18,517 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:41:38,501 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:41:58,510 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:42:08,519 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:42:18,529 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:42:38,534 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:42:58,544 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:43:18,554 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:43:38,562 - INFO - 패킷 전송 완료: {"trnm": "PING"}
+2025-07-25 11:43:43,965 - INFO - WebSocket 서버와 연결을 종료했습니다.

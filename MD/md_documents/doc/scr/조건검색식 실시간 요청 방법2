@@ -1,0 +1,124 @@
+모의투자에서 조건색식 실시간 요청 방법에 대해 알려줬는데 
+stock@cp:~/public_html$ python3 python_modules/kiwoom_api.py && python3 python_modules/realtime_condition_search.py
+INFO: 데이터베이스에서 Access Token을 성공적으로 불러왔습니다.
+INFO: WebSocket 서버에 연결되었습니다. 로그인을 시도합니다.
+INFO: 패킷 전송 완료: {trnm: LOGIN, token: Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw}
+INFO: 로그인 성공. 조건검색을 요청합니다.
+INFO: 패킷 전송 완료: {trnm: CNSRREQ, seq: 073, search_type: 1, stex_tp: K}
+INFO: 패킷 전송 완료: {trnm: PING}
+INFO: 패킷 전송 완료: {trnm: PING}
+INFO: 패킷 전송 완료: {trnm: PING}
+INFO: 패킷 전송 완료: {trnm: PING}
+이런 내용이 나오고 있어
+
+조건검색 실시간 요청 방법
+조건검색 실시간 요청을 위한 과정을 설명합니다. 이 과정에서는 WebSocket을 통해 실시간으로 조건검색을 요청하고 응답을 받는 방법을 다룹니다.
+
+✅ 요약
+이 코드는 키움증권의 REST API를 사용하여 모의투자 환경에서 조건검색을 실시간으로 요청하는 방법을 보여줍니다. WebSocket을 통해 로그인 후 조건검색 요청을 보내고, PING 패킷을 주기적으로 전송하여 연결을 유지합니다. Python 언어로 작성되었습니다.
+
+💻 코드
+python
+
+             
+import asyncio 
+import websockets
+import json
+
+# socket 정보
+SOCKET_URL = 'wss://mockapi.kiwoom.com:10000/api/dostk/websocket'  # 모의투자 접속 URL
+ACCESS_TOKEN = '[접근 토큰]'  # 고객 Access Token
+
+class WebSocketClient:
+    def __init__(self, uri):
+        self.uri = uri
+        self.websocket = None
+        self.connected = False
+        self.keep_running = True
+
+    async def connect(self):
+        try:
+            self.websocket = await websockets.connect(self.uri)
+            self.connected = True
+            print("서버와 연결을 시도 중입니다.")
+
+            # 로그인 패킷
+            param = {
+                'trnm': 'LOGIN',
+                'token': ACCESS_TOKEN
+            }
+
+            print('실시간 시세 서버로 로그인 패킷을 전송합니다.')
+            await self.send_message(message=param)
+
+        except Exception as e:
+            print(f'Connection error: {e}')
+            self.connected = False
+
+    async def send_message(self, message):
+        if not self.connected:
+            await self.connect()  # 연결이 끊어졌다면 재연결
+        if self.connected:
+            if not isinstance(message, str):
+                message = json.dumps(message)
+
+            await self.websocket.send(message)
+            print(f'Message sent: {message}')
+
+    async def receive_messages(self):
+        while self.keep_running:
+            try:
+                response = json.loads(await self.websocket.recv())
+                if response.get('trnm') == 'LOGIN':
+                    if response.get('return_code') != 0:
+                        print('로그인 실패하였습니다. : ', response.get('return_msg'))
+                        await self.disconnect()
+                    else:
+                        print('로그인 성공하였습니다.')
+                        # 조건검색 요청
+                        param = {
+                            'trnm': 'CNSRREQ',
+                            'seq': '073',  # 조건검색식 일련번호
+                            'search_type': '1',  # 조회타입
+                            'stex_tp': 'K'  # 거래소구분
+                        }
+                        await self.send_message(message=param)
+
+                elif response.get('trnm') == 'PING':
+                    await self.send_message(response)
+
+                if response.get('trnm') != 'PING':
+                    print(f'실시간 시세 서버 응답 수신: {response}')
+
+            except websockets.ConnectionClosed:
+                print('Connection closed by the server')
+                self.connected = False
+                await self.websocket.close()
+
+    async def run(self):
+        await self.connect()
+        await self.receive_messages()
+
+    async def disconnect(self):
+        self.keep_running = False
+        if self.connected and self.websocket:
+            await self.websocket.close()
+            self.connected = False
+            print('Disconnected from WebSocket server')
+
+async def main():
+    websocket_client = WebSocketClient(SOCKET_URL)
+    receive_task = asyncio.create_task(websocket_client.run())
+    await receive_task
+
+if __name__ == '__main__':
+    asyncio.run(main())
+         
+📘 설명
+이 코드는 WebSocket을 통해 키움증권의 실시간 시세 서버에 연결하여 조건검색을 요청하는 기능을 수행합니다.
+
+WebSocketClient 클래스: WebSocket 연결을 관리하는 클래스입니다. 서버에 연결하고 메시지를 전송하며 응답을 수신합니다.
+로그인: 서버에 로그인 패킷을 전송하여 인증을 받습니다.
+조건검색 요청: 로그인 성공 후 조건검색 요청을 전송합니다. 이때 seq는 조건검색식의 일련번호를 나타냅니다.
+PING 패킷: 연결을 유지하기 위해 주기적으로 PING 패킷을 전송합니다.
+응답 처리: 서버로부터 수신한 응답을 처리하여 결과를 출력합니다.

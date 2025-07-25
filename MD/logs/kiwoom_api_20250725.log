@@ -1,0 +1,892 @@
+2025-07-25 05:51:49,299 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 05:51:49,395 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 05:51:49,396 - __main__ - INFO - Code: 200
+2025-07-25 05:51:49,396 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 05:51:49,397 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 05:51:49,463 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 05:51:49,463 - __main__ - INFO - Code: 200
+2025-07-25 05:51:49,464 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 05:51:49,464 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000826800",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004857060",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007950",
+            "evlt_amt": "000000819310",
+            "pl_amt": "-00000142940",
+            "pl_rt": "-14.8548",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 05:51:49,472 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 05:51:49,472 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 05:51:49,473 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 05:51:49,474 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 05:51:49,474 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 05:51:49,474 - __main__ - INFO - 잔액 (DB에서): 826800.0
+2025-07-25 05:56:57,840 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 05:56:57,908 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 05:56:57,908 - __main__ - INFO - Code: 200
+2025-07-25 05:56:57,909 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 05:56:57,909 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 05:56:57,976 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 05:56:57,977 - __main__ - INFO - Code: 200
+2025-07-25 05:56:57,977 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 05:56:57,977 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000826800",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004857060",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007950",
+            "evlt_amt": "000000819310",
+            "pl_amt": "-00000142940",
+            "pl_rt": "-14.8548",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 05:56:57,986 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 05:56:57,986 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 05:56:57,987 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 05:56:57,987 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 05:56:57,987 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 05:56:57,987 - __main__ - INFO - 잔액 (DB에서): 826800.0
+2025-07-25 09:28:20,225 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 09:28:20,285 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 09:28:20,285 - __main__ - INFO - Code: 200
+2025-07-25 09:28:20,286 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 09:28:20,286 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 09:28:20,359 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 09:28:20,359 - __main__ - INFO - Code: 200
+2025-07-25 09:28:20,359 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 09:28:20,359 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000822640",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004852926",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007910",
+            "evlt_amt": "000000815177",
+            "pl_amt": "-00000147073",
+            "pl_rt": "-15.2843",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 09:28:20,367 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 09:28:20,367 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 09:28:20,368 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 09:28:20,368 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 09:28:20,368 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 09:28:20,368 - __main__ - INFO - 잔액 (DB에서): 822640.0
+2025-07-25 09:54:35,136 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 09:54:35,198 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 09:54:35,198 - __main__ - INFO - Code: 200
+2025-07-25 09:54:35,199 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 09:54:35,199 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 09:54:35,268 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 09:54:35,269 - __main__ - INFO - Code: 200
+2025-07-25 09:54:35,269 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 09:54:35,269 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000823680",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004853954",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007920",
+            "evlt_amt": "000000816205",
+            "pl_amt": "-00000146045",
+            "pl_rt": "-15.1774",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 09:54:35,278 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 09:54:35,278 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 09:54:35,279 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 09:54:35,279 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 09:54:35,280 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 09:54:35,280 - __main__ - INFO - 잔액 (DB에서): 823680.0
+2025-07-25 09:54:46,727 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 09:54:46,800 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 09:54:46,800 - __main__ - INFO - Code: 200
+2025-07-25 09:54:46,800 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 09:54:46,800 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 09:54:46,870 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 09:54:46,871 - __main__ - INFO - Code: 200
+2025-07-25 09:54:46,871 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 09:54:46,871 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000818480",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004848782",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007870",
+            "evlt_amt": "000000811033",
+            "pl_amt": "-00000151217",
+            "pl_rt": "-15.7149",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 09:54:46,881 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 09:54:46,881 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 09:54:46,882 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 09:54:46,882 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 09:54:46,882 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 09:54:46,882 - __main__ - INFO - 잔액 (DB에서): 818480.0
+2025-07-25 09:54:46,887 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 09:58:12,468 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 09:58:12,530 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 09:58:12,531 - __main__ - INFO - Code: 200
+2025-07-25 09:58:12,531 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 09:58:12,531 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 09:58:12,606 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 09:58:12,606 - __main__ - INFO - Code: 200
+2025-07-25 09:58:12,606 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 09:58:12,606 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000825760",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004856021",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007940",
+            "evlt_amt": "000000818272",
+            "pl_amt": "-00000143978",
+            "pl_rt": "-14.9626",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 09:58:12,618 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 09:58:12,618 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 09:58:12,618 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 09:58:12,618 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 09:58:12,619 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 09:58:12,619 - __main__ - INFO - 잔액 (DB에서): 825760.0
+2025-07-25 09:58:12,623 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 10:00:06,023 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 10:00:06,082 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 10:00:06,082 - __main__ - INFO - Code: 200
+2025-07-25 10:00:06,083 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 10:00:06,083 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 10:00:06,143 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 10:00:06,143 - __main__ - INFO - Code: 200
+2025-07-25 10:00:06,143 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 10:00:06,143 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000821600",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004851888",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007900",
+            "evlt_amt": "000000814138",
+            "pl_amt": "-00000148112",
+            "pl_rt": "-15.3923",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 10:00:06,149 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 10:00:06,149 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 10:00:06,149 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 10:00:06,149 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 10:00:06,149 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 10:00:06,149 - __main__ - INFO - 잔액 (DB에서): 821600.0
+2025-07-25 10:00:06,152 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 10:05:47,684 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 10:05:47,745 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 10:05:47,745 - __main__ - INFO - Code: 200
+2025-07-25 10:05:47,745 - __main__ - INFO - Body: {
+    "expires_dt": "20250726055149",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "Cj_PTWhzpbdmgQKhwb4gmdMHwzXJ_VWoo6Y9XF3tVgAqsk9JhzakhJYEO5BCcVgBxYyGjNc0HINrd2r7vdT0vw"
+}
+2025-07-25 10:05:47,746 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 10:05:47,809 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 10:05:47,810 - __main__ - INFO - Code: 200
+2025-07-25 10:05:47,810 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 10:05:47,810 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000821080",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004851368",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007895",
+            "evlt_amt": "000000813619",
+            "pl_amt": "-00000148631",
+            "pl_rt": "-15.4462",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 10:05:47,819 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 10:05:47,819 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 10:05:47,820 - __main__ - INFO - 토큰 (DB에서): Cj_PT**********
+2025-07-25 10:05:47,820 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 10:05:47,820 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 10:05:47,820 - __main__ - INFO - 잔액 (DB에서): 821080.0
+2025-07-25 10:05:47,825 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 11:52:51,175 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 11:52:51,175 - kiwoom_api - INFO - Code: 200
+2025-07-25 11:52:51,175 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 11:54:12,674 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 11:54:12,742 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 11:54:12,742 - __main__ - INFO - Code: 200
+2025-07-25 11:54:12,742 - __main__ - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 11:54:12,743 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 11:54:12,820 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 11:54:12,820 - __main__ - INFO - Code: 200
+2025-07-25 11:54:12,820 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 11:54:12,821 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000829920",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004860165",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007980",
+            "evlt_amt": "000000822416",
+            "pl_amt": "-00000139834",
+            "pl_rt": "-14.5320",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 11:54:12,829 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 11:54:12,830 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 11:54:12,830 - __main__ - INFO - 토큰 (DB에서): NsmVv**********
+2025-07-25 11:54:12,831 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 11:54:12,831 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 11:54:12,831 - __main__ - INFO - 잔액 (DB에서): 829920.0
+2025-07-25 11:54:12,836 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 11:56:21,897 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 11:56:21,960 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 11:56:21,960 - __main__ - INFO - Code: 200
+2025-07-25 11:56:21,960 - __main__ - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 11:56:21,961 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 11:56:22,025 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 11:56:22,026 - __main__ - INFO - Code: 200
+2025-07-25 11:56:22,026 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 11:56:22,026 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000827840",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004858098",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007960",
+            "evlt_amt": "000000820349",
+            "pl_amt": "-00000141901",
+            "pl_rt": "-14.7468",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 11:56:22,035 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 11:56:22,035 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 11:56:22,036 - __main__ - INFO - 토큰 (DB에서): NsmVv**********
+2025-07-25 11:56:22,036 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 11:56:22,036 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 11:56:22,036 - __main__ - INFO - 잔액 (DB에서): 827840.0
+2025-07-25 11:56:22,041 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 11:56:54,580 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 11:56:54,655 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 11:56:54,655 - __main__ - INFO - Code: 200
+2025-07-25 11:56:54,656 - __main__ - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 11:56:54,656 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 11:56:54,722 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 11:56:54,723 - __main__ - INFO - Code: 200
+2025-07-25 11:56:54,723 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 11:56:54,723 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000827840",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004858098",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007960",
+            "evlt_amt": "000000820349",
+            "pl_amt": "-00000141901",
+            "pl_rt": "-14.7468",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 11:56:54,732 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 11:56:54,732 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 11:56:54,733 - __main__ - INFO - 토큰 (DB에서): NsmVv**********
+2025-07-25 11:56:54,733 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 11:56:54,733 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 11:56:54,733 - __main__ - INFO - 잔액 (DB에서): 827840.0
+2025-07-25 11:56:54,739 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 12:25:23,350 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 12:25:23,350 - kiwoom_api - INFO - Code: 200
+2025-07-25 12:25:23,351 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 12:31:29,833 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 12:31:29,833 - kiwoom_api - INFO - Code: 200
+2025-07-25 12:31:29,833 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 12:36:28,442 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 12:36:28,442 - kiwoom_api - INFO - Code: 200
+2025-07-25 12:36:28,443 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 12:39:19,733 - __main__ - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 12:39:19,839 - __main__ - INFO - --- 토큰 발급 응답 ---
+2025-07-25 12:39:19,839 - __main__ - INFO - Code: 200
+2025-07-25 12:39:19,840 - __main__ - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 12:39:19,840 - __main__ - INFO - 
+토큰 발급 성공. 발급된 토큰으로 계좌 조회를 시작합니다.
+2025-07-25 12:39:19,909 - __main__ - INFO - 
+--- 계좌 정보 조회 응답 (kt00004) ---
+2025-07-25 12:39:19,909 - __main__ - INFO - Code: 200
+2025-07-25 12:39:19,910 - __main__ - INFO - Header: {
+    "next-key": "",
+    "cont-yn": "N",
+    "api-id": "kt00004"
+}
+2025-07-25 12:39:19,910 - __main__ - INFO - Body: {
+    "acnt_nm": "",
+    "brch_nm": "",
+    "entr": "000004034390",
+    "d2_entra": "000004034390",
+    "tot_est_amt": "000000829920",
+    "aset_evlt_amt": "000004034390",
+    "tot_pur_amt": "000000962250",
+    "prsm_dpst_aset_amt": "000004860165",
+    "tot_grnt_sella": "000000000000",
+    "tdy_lspft_amt": "000000000000",
+    "invt_bsamt": "000000000000",
+    "lspft_amt": "000000000000",
+    "tdy_lspft": "000000000000",
+    "lspft2": "000000000000",
+    "lspft": "000000000000",
+    "tdy_lspft_rt": "0.00",
+    "lspft_ratio": "0.00",
+    "lspft_rt": "0.00",
+    "stk_acnt_evlt_prst": [
+        {
+            "stk_cd": "A005740",
+            "stk_nm": "크라운해태홀딩스",
+            "rmnd_qty": "000000000104",
+            "avg_prc": "000000009252",
+            "cur_prc": "000000007980",
+            "evlt_amt": "000000822416",
+            "pl_amt": "-00000139834",
+            "pl_rt": "-14.5320",
+            "loan_dt": "",
+            "pur_amt": "000000962250",
+            "setl_remn": "000000000104",
+            "pred_buyq": "000000000000",
+            "pred_sellq": "000000000000",
+            "tdy_buyq": "000000000000",
+            "tdy_sellq": "000000000000"
+        }
+    ],
+    "return_code": 0,
+    "return_msg": "모의투자 조회완료"
+}
+2025-07-25 12:39:19,918 - __main__ - INFO - API 정보가 데이터베이스에 저장되었습니다.
+2025-07-25 12:39:19,919 - __main__ - INFO - 
+DB에서 정보 확인:
+2025-07-25 12:39:19,919 - __main__ - INFO - 토큰 (DB에서): NsmVv**********
+2025-07-25 12:39:19,920 - __main__ - INFO - 계좌 번호 (DB에서): 000004034390
+2025-07-25 12:39:19,920 - __main__ - INFO - 계좌명 (DB에서): 
+2025-07-25 12:39:19,920 - __main__ - INFO - 잔액 (DB에서): 829920.0
+2025-07-25 12:39:19,925 - __main__ - INFO - 진행 중인 작업 내용이 데이터베이스에 저장되었습니다.
+2025-07-25 15:09:01,902 - kiwoom_api - INFO - --- 코스피/코스닥 전종목 정보 업데이트 시작 ---
+2025-07-25 15:09:01,903 - kiwoom_api - INFO - 데이터베이스와 테이블이 초기화되었습니다.
+2025-07-25 15:09:01,974 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 15:09:01,974 - kiwoom_api - INFO - Code: 200
+2025-07-25 15:09:01,974 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
+2025-07-25 15:09:01,974 - kiwoom_api - INFO - --- 코스피 종목 정보를 가져오는 중...
+2025-07-25 15:09:02,163 - kiwoom_api - INFO - (코스피) 현재 페이지에서 2354개 종목 추가 완료. 현재까지 총 2354개 수집.
+2025-07-25 15:09:02,163 - kiwoom_api - INFO - (코스피) 더 이상 다음 페이지가 없습니다. 최종 수집 완료.
+2025-07-25 15:09:02,163 - kiwoom_api - INFO - --- 총 2354개의 코스피 종목 정보 수집 완료.
+2025-07-25 15:09:02,163 - kiwoom_api - INFO - --- 코스닥 종목 정보를 가져오는 중...
+2025-07-25 15:09:02,314 - kiwoom_api - INFO - (코스닥) 현재 페이지에서 1798개 종목 추가 완료. 현재까지 총 1798개 수집.
+2025-07-25 15:09:02,314 - kiwoom_api - INFO - (코스닥) 더 이상 다음 페이지가 없습니다. 최종 수집 완료.
+2025-07-25 15:09:02,314 - kiwoom_api - INFO - --- 총 1798개의 코스닥 종목 정보 수집 완료.
+2025-07-25 15:09:02,315 - kiwoom_api - INFO - 
+--- 최종적으로 수집된 전체 종목 수: 4152개 ---
+2025-07-25 15:09:02,348 - kiwoom_api - INFO - 총 4152개의 종목 정보를 데이터베이스에 저장/업데이트했습니다.
+2025-07-25 15:09:02,348 - kiwoom_api - INFO - --- 전종목 정보 업데이트 완료 ---
+2025-07-25 15:09:33,984 - kiwoom_api - INFO - --- 토큰 발급 응답 ---
+2025-07-25 15:09:33,984 - kiwoom_api - INFO - Code: 200
+2025-07-25 15:09:33,984 - kiwoom_api - INFO - Body: {
+    "expires_dt": "20250726115251",
+    "return_msg": "정상적으로 처리되었습니다",
+    "token_type": "Bearer",
+    "return_code": 0,
+    "token": "NsmVvdnVO_cRKuMZ5j2czN-NBSsOI2WJ4CJPHW6WsdRM52lP7RmOYsBGB_GKiI6ZYAPgOejZypULu0ojhs9vDg"
+}
