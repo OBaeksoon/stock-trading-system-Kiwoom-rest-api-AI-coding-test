@@ -30,15 +30,28 @@ THEMES_KEYWORDS = {
         "오가노이드", "디지털 헬스케어", "임상", "삼성바이오로직스", "셀트리온", 
         "SK바이오팜", "유한양행", "한미약품", "루닛", "뷰노", "제이엘케이", "비트컴퓨터", "유비케어"
     ],
-    "친환경 에너지": [
+    "친환경 & 원자력": [
         "친환경", "태양광", "풍력", "수소", "신재생", "에너지", "탄소중립", "RE100", 
-        "ESG", "스마트그리드", "ESS", "한화솔루션", "OCI", "씨에스윈드", "두산퓨얼셀", 
-        "에스퓨얼셀", "KC코트렐", "대한전선", "신성이엔지", "유니슨"
+        "ESG", "스마트그리드", "ESS", "원자력", "SMR", "한화솔루션", "OCI", "씨에스윈드", 
+        "두산에너빌리티", "SNT에너지", "에스퓨얼셀", "KC코트렐", "대한전선", "신성이엔지", "유니슨"
     ],
-    "우주산업": [
-        "우주", "항공", "위성", "발사체", "뉴스페이스", "스타링크", "우주항공청", 
-        "아르테미스", "누리호", "한화에어로스페이스", "한국항공우주", "KAI", 
-        "쎄트렉아이", "AP위성", "인텔리안테크", "LIG넥스원", "현대로템", "대한항공"
+    "우주 & 항공 & 방산": [
+        "우주", "항공", "위성", "발사체", "뉴스페이스", "스타링크", "UAM", "드론", "방산",
+        "누리호", "한화에어로스페이스", "한국항공우주", "KAI", "쎄트렉아이", "AP위성", 
+        "인텔리안테크", "LIG넥스원", "현대로템", "하이즈항공", "아스트"
+    ],
+    "조선 & 전력 인프라": [
+        "조선", "해운", "전력", "전선", "케이블", "변압기", "스마트그리드", "HD현대중공업",
+        "삼성중공업", "한화오션", "HD한국조선해양", "HMM", "LS마린솔루션", "가온전선"
+    ],
+    "가상자산 & 게임 & NFT": [
+        "가상화폐", "가상자산", "비트코인", "이더리움", "블록체인", "NFT", "대체불가토큰",
+        "게임", "메타버스", "VR", "가상현실", "위메이드", "컴투스", "크래프톤", "엔씨소프트",
+        "카카오게임즈", "미투온", "다날"
+    ],
+    "로봇": [
+        "로봇", "자동화", "물류로봇", "협동로봇", "레인보우로보틱스", "두산로보틱스",
+        "에브리봇", "유진로봇", "티로보틱스"
     ]
 }
 
@@ -72,16 +85,27 @@ def classify_news_item(news_item):
     news_id, title, description = news_item
     text_to_check = (title + ' ' + (description or '')).lower()
 
+    # 가장 관련성 높은 테마를 찾기 위한 로직
+    best_theme = None
+    max_score = 0
+    
     for theme, keywords in THEMES_KEYWORDS.items():
+        score = 0
         for keyword in keywords:
             if keyword.lower() in text_to_check:
-                return news_id, theme
-    return news_id, None
+                score += 1
+        
+        if score > max_score:
+            max_score = score
+            best_theme = theme
+            
+    return news_id, best_theme
 
 def update_theme_in_db(conn, news_id, theme):
     """데이터베이스에 분류된 테마를 업데이트합니다."""
     try:
         cursor = conn.cursor()
+        # theme이 None일 경우 NULL로 업데이트
         update_query = "UPDATE stock_news SET theme = %s WHERE id = %s"
         cursor.execute(update_query, (theme, news_id))
         cursor.close()
@@ -100,38 +124,37 @@ def main():
             return
 
         cursor = conn.cursor()
-        # 'id' 컬럼이 있다고 가정하고, 없으면 'link' 같은 고유 키로 변경 필요
-        # 'theme' 컬럼이 비어있거나 NULL인 뉴스만 선택
-        cursor.execute("SELECT id, title, description FROM stock_news WHERE theme IS NULL OR theme = ''")
+        # 모든 뉴스를 대상으로 재분류
+        cursor.execute("SELECT id, title, description FROM stock_news")
         news_to_classify = cursor.fetchall()
         cursor.close()
 
         if not news_to_classify:
-            logger.info("새롭게 분류할 뉴스가 없습니다.")
+            logger.info("분류할 뉴스가 없습니다.")
             return
 
-        logger.info(f"총 {len(news_to_classify)}개의 뉴스를 분류합니다.")
+        logger.info(f"총 {len(news_to_classify)}개의 뉴스를 전체 재분류합니다.")
         
         update_count = 0
         
         # 여러 연결을 사용하여 병렬로 DB 업데이트
         with ThreadPoolExecutor(max_workers=10) as executor:
-            # 각 뉴스 분류 작업 제출
             future_to_news = {executor.submit(classify_news_item, news): news for news in news_to_classify}
             
-            # DB 연결 풀 모방
             db_connections = [get_db_connection() for _ in range(10)]
             
             conn_idx = 0
             for future in as_completed(future_to_news):
                 news_id, theme = future.result()
-                if theme:
-                    db_conn = db_connections[conn_idx % len(db_connections)]
-                    if update_theme_in_db(db_conn, news_id, theme):
+                
+                # theme이 None이 아니거나, 기존 theme과 다른 경우에만 업데이트 (선택적 최적화)
+                # 여기서는 모든 결과를 업데이트하도록 처리
+                db_conn = db_connections[conn_idx % len(db_connections)]
+                if update_theme_in_db(db_conn, news_id, theme):
+                    if theme is not None:
                         update_count += 1
-                    conn_idx += 1
+                conn_idx += 1
 
-            # 모든 연결에 대해 commit 및 close
             for db_conn in db_connections:
                 if db_conn:
                     db_conn.commit()
@@ -140,7 +163,6 @@ def main():
         logger.info(f"총 {update_count}개의 뉴스에 테마를 성공적으로 업데이트했습니다.")
 
     except mysql.connector.Error as err:
-        # 'id' 컬럼이 없는 경우 에러 처리
         if 'Unknown column \'id\'' in str(err):
             logger.error("오류: 'stock_news' 테이블에 'id' 컬럼이 없습니다. 'link' 등 고유한 값을 가진 다른 컬럼으로 스크립트를 수정해야 합니다.")
         else:
@@ -152,3 +174,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

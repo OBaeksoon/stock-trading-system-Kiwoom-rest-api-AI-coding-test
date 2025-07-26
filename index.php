@@ -1,3 +1,44 @@
+<?php
+// --- 데이터베이스 연결 설정 ---
+$config = parse_ini_file('config.ini');
+$db_host = $config['HOST'];
+$db_user = $config['USER'];
+$db_pass = $config['PASSWORD'];
+$db_name = $config['DATABASE'];
+$db_port = $config['PORT'];
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// --- 대시보드 데이터 조회 ---
+// 1. 전체 종목 수
+$total_stocks_result = $conn->query("SELECT COUNT(*) as count FROM stock_details");
+$total_stocks = $total_stocks_result->fetch_assoc()['count'];
+
+// 2. 전체 뉴스 수
+$total_news_result = $conn->query("SELECT COUNT(*) as count FROM stock_news");
+$total_news = $total_news_result->fetch_assoc()['count'];
+
+// 3. 분류된 테마 종류 수
+$total_themes_result = $conn->query("SELECT COUNT(DISTINCT theme) as count FROM stock_news WHERE theme IS NOT NULL AND theme != ''");
+$total_themes = $total_themes_result->fetch_assoc()['count'];
+
+// 4. 상위 5개 테마
+$top_themes_result = $conn->query("SELECT theme, COUNT(*) as count 
+                                   FROM stock_news 
+                                   WHERE theme IS NOT NULL AND theme != '' 
+                                   GROUP BY theme 
+                                   ORDER BY count DESC 
+                                   LIMIT 5");
+$top_themes = [];
+while($row = $top_themes_result->fetch_assoc()) {
+    $top_themes[] = $row;
+}
+
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -11,22 +52,72 @@
             color: #333;
             margin: 0;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
         .container {
-            max-width: 900px;
-            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
             color: #1a2c4e;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             font-size: 2.5em;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .stat-card .stat-number {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #3498db;
+        }
+        .top-themes-card {
+            grid-column: 1 / -1; /* Full width */
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+        }
+        .top-themes-card h3 {
+            text-align: center;
+            margin: 0 0 20px 0;
+            color: #555;
+        }
+        .top-themes-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .top-themes-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .top-themes-list li:last-child {
+            border-bottom: none;
+        }
+        .top-themes-list .theme-name {
             font-weight: 600;
+        }
+        .top-themes-list .theme-count {
+            font-weight: bold;
+            color: #e74c3c;
         }
         .menu-grid {
             display: grid;
@@ -46,28 +137,53 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 150px;
+            min-height: 120px;
         }
         .menu-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff;
+            transform: translateY(-5px);
         }
         .menu-card h2 {
-            margin-top: 0;
-            margin-bottom: 10px;
+            margin: 0 0 10px 0;
             color: #3498db;
-            font-size: 1.6em;
+            font-size: 1.5em;
         }
         .menu-card p {
-            font-size: 1em;
+            font-size: 0.9em;
             color: #555;
-            margin-bottom: 0;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>주식 자동매매 대시보드</h1>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <h3>총 관리 종목</h3>
+                <p class="stat-number"><?php echo number_format($total_stocks); ?></p>
+            </div>
+            <div class="stat-card">
+                <h3>수집된 뉴스</h3>
+                <p class="stat-number"><?php echo number_format($total_news); ?></p>
+            </div>
+            <div class="stat-card">
+                <h3>분류된 테마</h3>
+                <p class="stat-number"><?php echo number_format($total_themes); ?></p>
+            </div>
+            <div class="top-themes-card">
+                <h3>뉴스 상위 테마 (Top 5)</h3>
+                <ul class="top-themes-list">
+                    <?php foreach($top_themes as $theme): ?>
+                        <li>
+                            <span class="theme-name"><?php echo htmlspecialchars($theme['theme']); ?></span>
+                            <span class="theme-count"><?php echo number_format($theme['count']); ?> 개</span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+
         <div class="menu-grid">
             <a href="display_all_stocks.php" class="menu-card">
                 <h2>전체 종목 조회</h2>
@@ -75,7 +191,7 @@
             </a>
             <a href="MD/themed_news.php" class="menu-card">
                 <h2>테마별 뉴스</h2>
-                <p>AI, 2차전지 등 주요 테마별 뉴스 현황을 봅니다.</p>
+                <p>주요 테마별 뉴스 현황을 봅니다.</p>
             </a>
             <a href="display_stock_news.php" class="menu-card">
                 <h2>종목별 뉴스 검색</h2>
