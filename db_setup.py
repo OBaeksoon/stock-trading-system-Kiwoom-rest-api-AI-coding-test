@@ -56,7 +56,23 @@ def setup_database():
         """)
         logger.info("테이블 생성 완료.")
 
-        # 2. config.ini에서 API 키 읽기
+        # 2. `stock_news` 테이블 생성
+        logger.info("`stock_news` 테이블을 생성합니다...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_news (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                stock_code VARCHAR(20) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                link VARCHAR(255) NOT NULL,
+                description TEXT,
+                pub_date DATETIME,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_news (stock_code, link)
+            )
+        """)
+        logger.info("stock_news 테이블 생성 완료.")
+
+        # 3. config.ini에서 API 키 읽기
         config = configparser.ConfigParser()
         config.read(CONFIG_FILE)
         app_key = config.get('API', 'APP_KEY')
