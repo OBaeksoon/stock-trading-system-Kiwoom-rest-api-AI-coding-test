@@ -1,4 +1,6 @@
 <?php
+session_start(); // 세션 시작
+
 // 데이터베이스 연결 설정
 $config_file = __DIR__ . '/config.ini';
 
@@ -20,10 +22,21 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// 검색어 처리
-$search_query = isset($_GET['search_query']) ? $_GET['search_query'] : '';
+// 검색어 처리 로직 수정
+$search_query = '';
+// 1. 새로운 검색어가 있으면 그 값을 사용하고 세션에 저장
+if (isset($_GET['search_query'])) {
+    $search_query = $_GET['search_query'];
+    $_SESSION['last_search_query'] = $search_query;
+} 
+// 2. 새로운 검색어가 없고 세션에 마지막 검색어가 있으면 그 값을 사용
+else if (isset($_SESSION['last_search_query'])) {
+    $search_query = $_SESSION['last_search_query'];
+}
+
 $news_list = [];
 
+// 검색어가 있을 경우에만 DB 조회
 if (!empty($search_query)) {
     $search_term = "%" . $conn->real_escape_string($search_query) . "%";
     
