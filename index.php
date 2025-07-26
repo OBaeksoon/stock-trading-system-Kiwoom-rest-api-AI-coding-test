@@ -75,6 +75,13 @@ $conn->close();
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             padding: 20px;
             text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
         }
         .stat-card h3 {
             margin: 0 0 10px 0;
@@ -159,18 +166,18 @@ $conn->close();
         <h1>주식 자동매매 대시보드</h1>
 
         <div class="dashboard-grid">
-            <div class="stat-card">
+            <a href="display_all_stocks.php" class="stat-card">
                 <h3>총 관리 종목</h3>
                 <p class="stat-number"><?php echo number_format($total_stocks); ?></p>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="MD/themed_news.php" class="stat-card">
                 <h3>수집된 뉴스</h3>
                 <p class="stat-number"><?php echo number_format($total_news); ?></p>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="MD/themed_news.php" class="stat-card">
                 <h3>분류된 테마</h3>
                 <p class="stat-number"><?php echo number_format($total_themes); ?></p>
-            </div>
+            </a>
             <div class="top-themes-card">
                 <h3>뉴스 상위 테마 (Top 5)</h3>
                 <ul class="top-themes-list">
