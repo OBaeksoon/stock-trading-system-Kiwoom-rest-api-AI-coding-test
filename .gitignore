@@ -1,0 +1,28 @@
+# Log files
+logs/
+MD/logs/
+
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Python virtual environments
+.venv/
+venv/
+
+# Kiwoom API configuration (contains sensitive info)
+config.ini
+
+# pyheroapi library (if installed as a dependency)
+pyheroapi/
+
+# Database files
+*.db
+
+# IDE specific files
+.idea/
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db

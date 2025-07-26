@@ -5,6 +5,7 @@ import os
 import datetime
 import logging
 import mysql.connector
+import time # Added for time.sleep
 from kiwoom_api import get_access_token, get_db_connection, logger, CONFIG_FILE, PROJECT_ROOT
 
 # --- 로그 설정 (kiwoom_api와 동일한 로거 사용) ---
@@ -65,13 +66,27 @@ def get_all_stocks(token, market_type_code, market_name):
 
     while True:
         response_data = fn_ka10099(token, market_type_code, cont_yn, next_key)
+        time.sleep(0.5) # Add a delay after each fn_ka10099 request
         if response_data is None:
             logger.error(f"{market_name} 종목 정보 조회에 실패했습니다.")
             break
 
-        stocks = response_data.get('output1', [])
+        # API 응답 전체를 로그 파일에 기록 (자세한 디버깅용)
+        logger.debug(f"Raw API 응답 for {market_name} (Page cont-yn={cont_yn}, next-key={next_key}): {json.dumps(response_data, indent=4, ensure_ascii=False)}")
+
+        # 'output1' 필드를 먼저 확인하고, 없으면 'list' 필드를 확인
+        stocks = response_data.get('output1')
+        if stocks is None or not isinstance(stocks, list):
+            stocks = response_data.get('list', [])
+            if not isinstance(stocks, list):
+                logger.warning(f"API 응답에 'output1' 또는 'list' 필드가 없거나 유효한 리스트가 아닙니다. 응답: {json.dumps(response_data, indent=4, ensure_ascii=False)}")
+                break # 유효한 데이터가 없으므로 루프 종료
+
+        # stocks 리스트의 내용도 로깅하여 개별 종목 객체 구조 확인
+        logger.debug(f"Processed stocks list for {market_name}: {json.dumps(stocks, indent=4, ensure_ascii=False)}")
+
         all_stocks.extend([
-            {'stock_code': s['stk_cd'], 'stock_name': s['stk_nm'], 'market': market_name}
+            {'stock_code': s.get('code') or s.get('stk_cd') or s.get('종목코드'), 'stock_name': s.get('name') or s.get('stk_nm') or s.get('종목명'), 'market': market_name}
             for s in stocks
         ])
 

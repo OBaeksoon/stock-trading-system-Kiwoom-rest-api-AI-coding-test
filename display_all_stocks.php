@@ -63,7 +63,7 @@
         <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="종목 코드 또는 종목명 검색...">
 
         <?php
-        $config_file = __DIR__ . '/../config.ini';
+        $config_file = __DIR__ . '/config.ini';
 
         if (!file_exists($config_file)) {
             echo "<p class=\"error\">오류: config.ini 파일을 찾을 수 없습니다.</p>";
