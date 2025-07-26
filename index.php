@@ -208,6 +208,10 @@ $conn->close();
                 <h2>종목 상세 정보</h2>
                 <p>종목 코드를 입력하여 상세 정보를 조회합니다.</p>
             </a>
+            <a href="display_technical_analysis.php" class="menu-card">
+                <h2>기술적 지표 조회</h2>
+                <p>종목의 이동평균, RSI, MACD 등 기술적 지표를 확인합니다.</p>
+            </a>
         </div>
     </div>
 </body>
