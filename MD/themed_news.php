@@ -111,7 +111,7 @@ $conn->close();
         <?php else: ?>
             <p style="text-align:center;">분류된 테마가 없습니다.</p>
         <?php endif; ?>
-        <a href="index.php" class="home-link">메인으로 돌아가기</a>
+        <a href="../index.php" class="home-link">메인으로 돌아가기</a>
     </div>
 </body>
 </html>
