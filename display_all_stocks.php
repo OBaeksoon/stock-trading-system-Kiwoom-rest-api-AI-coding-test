@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전체 종목 조회</title>
+    <title>전체 종목 조회 (테마 및 뉴스 포함)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,10 +39,16 @@
             padding: 12px;
             border: 1px solid #ddd;
             text-align: left;
+            white-space: nowrap;
+        }
+        td.news-title {
+            white-space: normal; /* 뉴스 제목은 여러 줄로 표시될 수 있도록 설정 */
         }
         th {
             background-color: #007bff;
             color: white;
+            position: sticky;
+            top: 0;
         }
         tr:nth-child(even) {
             background-color: #f2f2f2;
@@ -60,15 +66,28 @@
             font-weight: bold;
             color: #555;
         }
+        .news-link {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .news-link:hover {
+            text-decoration: underline;
+        }
+        .positive {
+            color: red;
+        }
+        .negative {
+            color: blue;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>전체 종목 조회</h1>
-        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="종목 코드 또는 종목명 검색...">
+        <h1>전체 종목 조회 (테마 및 뉴스 포함)</h1>
+        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="종목, 테마, 또는 뉴스 내용 검색...">
 
         <?php
-        // DB 연결 설정 로드 (config.ini 파일은 동일 디렉토리에 있다고 가정)
+        // DB 연결 설정 로드
         $config_file = __DIR__ . '/config.ini';
 
         if (!file_exists($config_file)) {
@@ -77,7 +96,6 @@
 
         $config = parse_ini_file($config_file, true);
 
-        // config.ini 파일의 [DB] 섹션에 맞게 수정
         if ($config === false || !isset($config['DB'])) {
             die("<p class=\"error\">오류: config.ini 파일에 [DB] 섹션 또는 필요한 키가 누락되었습니다.</p>");
         }
@@ -94,25 +112,68 @@
         if ($conn->connect_error) {
             die("<p class=\"error\">데이터베이스 연결 실패: " . $conn->connect_error . "</p>");
         }
+        
+        // UTF-8 인코딩 설정
+        $conn->set_charset("utf8mb4");
 
-        // SQL 쿼리 수정: Python 스크립트가 사용하는 컬럼명에 맞춤
-        $sql = "SELECT code, name, marketName, current_price, fluctuation_rate, base_price FROM all_stocks ORDER BY name ASC";
+        // SQL 쿼리 수정: all_stocks, stock_details, stock_news 테이블을 조인합니다.
+        $sql = "
+            SELECT
+                a.stock_code,
+                a.stock_name,
+                a.market,
+                d.current_price,
+                d.previous_day_closing_price,
+                (SELECT theme FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS theme,
+                (SELECT title FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS news_title,
+                (SELECT link FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS news_link
+            FROM
+                all_stocks a
+            LEFT JOIN
+                stock_details d ON a.stock_code = d.stock_code
+            ORDER BY
+                a.stock_name ASC;
+        ";
+        
         $result = $conn->query($sql);
 
         if ($result && $result->num_rows > 0) {
             echo "<table id='stockTable'>";
-            echo "<thead><tr><th>종목코드</th><th>종목명</th><th>시장</th><th>현재가</th><th>등락률</th><th>기준가</th></tr></thead>";
+            echo "<thead><tr><th>종목코드</th><th>종목명</th><th>시장</th><th>현재가</th><th>등락률</th><th>테마</th><th>최신 뉴스</th></tr></thead>";
             echo "<tbody>";
             while($row = $result->fetch_assoc()) {
-                $fluctuation_rate = isset($row['fluctuation_rate']) ? number_format($row['fluctuation_rate'], 2) . '%' : 'N/A';
-                
+                // 등락률 계산
+                $fluctuation_rate_str = 'N/A';
+                $rate_class = '';
+                if (is_numeric($row["current_price"]) && is_numeric($row["previous_day_closing_price"]) && $row["previous_day_closing_price"] != 0) {
+                    $current_price = floatval($row["current_price"]);
+                    $prev_close_price = floatval($row["previous_day_closing_price"]);
+                    $fluctuation_rate = (($current_price - $prev_close_price) / $prev_close_price) * 100;
+                    $fluctuation_rate_str = number_format($fluctuation_rate, 2) . '%';
+                    if ($fluctuation_rate > 0) {
+                        $rate_class = 'positive';
+                    } elseif ($fluctuation_rate < 0) {
+                        $rate_class = 'negative';
+                    }
+                }
+
                 echo "<tr>";
-                echo "<td>" . htmlspecialchars($row["code"]) . "</td>";
-                echo "<td>" . htmlspecialchars($row["name"]) . "</td>";
-                echo "<td>" . htmlspecialchars($row["marketName"]) . "</td>";
-                echo "<td>" . htmlspecialchars($row["current_price"]) . "</td>";
-                echo "<td>" . htmlspecialchars($fluctuation_rate) . "</td>";
-                echo "<td>" . htmlspecialchars($row["base_price"]) . "</td>";
+                echo "<td>" . htmlspecialchars($row["stock_code"]) . "</td>";
+                echo "<td>" . htmlspecialchars($row["stock_name"]) . "</td>";
+                echo "<td>" . htmlspecialchars($row["market"]) . "</td>";
+                echo "<td>" . (is_numeric($row["current_price"]) ? number_format($row["current_price"]) : 'N/A') . "</td>";
+                echo "<td class='" . $rate_class . "'>" . $fluctuation_rate_str . "</td>";
+                echo "<td>" . htmlspecialchars($row["theme"] ?? 'N/A') . "</td>";
+                
+                // 뉴스 제목을 링크로 만듭니다.
+                $news_title = htmlspecialchars($row["news_title"] ?? 'N/A');
+                $news_link = htmlspecialchars($row["news_link"] ?? '#');
+                if ($news_link !== '#') {
+                    echo "<td class='news-title'><a href='" . $news_link . "' target='_blank' class='news-link'>" . $news_title . "</a></td>";
+                } else {
+                    echo "<td class='news-title'>" . $news_title . "</td>";
+                }
+                
                 echo "</tr>";
             }
             echo "</tbody>";
@@ -127,7 +188,7 @@
 
     <script>
         function searchTable() {
-            var input, filter, table, tr, td1, td2, i, txtValue1, txtValue2;
+            var input, filter, table, tr, i, txtValue;
             input = document.getElementById("searchInput");
             filter = input.value.toUpperCase();
             table = document.getElementById("stockTable");
@@ -135,18 +196,20 @@
 
             tr = table.getElementsByTagName("tr");
 
-            for (i = 1; i < tr.length; i++) { // Skip header row
-                td1 = tr[i].getElementsByTagName("td")[0]; // Stock Code
-                td2 = tr[i].getElementsByTagName("td")[1]; // Stock Name
-                if (td1 && td2) {
-                    txtValue1 = td1.textContent || td1.innerText;
-                    txtValue2 = td2.textContent || td2.innerText;
-                    if (txtValue1.toUpperCase().indexOf(filter) > -1 || txtValue2.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
+            for (i = 1; i < tr.length; i++) { // 헤더 행 건너뛰기
+                // 모든 td를 순회하며 검색
+                let display = "none";
+                let tds = tr[i].getElementsByTagName("td");
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            display = "";
+                            break; // 일치하는 셀을 찾으면 루프 중단
+                        }
                     }
                 }
+                tr[i].style.display = display;
             }
         }
     </script>
