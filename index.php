@@ -212,6 +212,10 @@ $conn->close();
                 <h2>기술적 지표 조회</h2>
                 <p>종목의 이동평균, RSI, MACD 등 기술적 지표를 확인합니다.</p>
             </a>
+            <a href="view_stock_chart.php" class="menu-card">
+                <h2>실시간 차트 조회</h2>
+                <p>종목의 주봉, 일봉, 분봉 차트를 시각화하여 보여줍니다.</p>
+            </a>
         </div>
     </div>
 </body>

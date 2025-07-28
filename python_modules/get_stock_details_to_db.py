@@ -217,7 +217,7 @@ def get_all_stocks_with_details(token, market_type_code, market_name):
                 closing_price_from_prev_day = daly_trde_dtl[0].get('close_pric')
                 if closing_price_from_prev_day:
                     previous_day_closing_price = closing_price_from_prev_day # Use this as the definitive previous day's close
-        time.sleep(0.5) # Add a delay after each ka10015 request
+        time.sleep(0.2) # Add a delay after each ka10015 request
 
         # For 'closing_price', we'll use the 'current_price' from ka10001 if it's the end of the day,
         # or if we need a 'last known price' for the current day.
@@ -265,7 +265,7 @@ def save_stock_details_to_db(stocks):
         """
         cursor.execute(create_table_query)
         conn.commit()
-        logger.info("stock_details 테이블이 준비되었습니다.")
+        logger.info(" 테이블이 준비되었습니다.")
 
         # 데이터 삽입 또는 업데이트
         insert_query = """

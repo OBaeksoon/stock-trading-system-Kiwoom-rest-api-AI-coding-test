@@ -124,7 +124,8 @@ def get_all_stocks(token, market_type_code, market_name):
 
     while True:
         response_data = fn_ka10099(token, market_type_code, cont_yn, next_key)
-        time.sleep(0.5)
+        logger.debug(f"API Response for {market_name}: {response_data}")
+        time.sleep(1) # API 호출 간 1초 대기
         if response_data is None:
             logger.error(f"{market_name} 종목 정보 조회에 실패했습니다.")
             break
@@ -133,7 +134,7 @@ def get_all_stocks(token, market_type_code, market_name):
         if not isinstance(stocks, list):
             stocks = response_data.get('list', [])
             if not isinstance(stocks, list):
-                logger.warning(f"API 응답에 'output1' 또는 'list' 필드가 없거나 유효한 리스트가 아닙니다.")
+                logger.warning(f"API 응답에 'output1' 또는 'list' 필드가 없거나 유효한 리스트가 아닙니다. 응답: {response_data}")
                 break
 
         all_stocks.extend([
@@ -259,14 +260,14 @@ def get_and_save_details(token, all_stocks):
             output = ka10001_data.get('output', [{}])[0]
             current_price = output.get('cur_prc')
             circulating_shares = output.get('dstr_stk')
-        time.sleep(0.2)
+        time.sleep(1)
 
         # 2. 일별거래상세요청 (ka10015) - 전일 종가 확인
         ka10015_data = fn_ka10015(token, stock_code, previous_trading_day_str)
         if ka10015_data and ka10015_data.get('return_code') == 0:
             daily_detail = ka10015_data.get('daly_trde_dtl', [{}])[0]
             previous_day_closing_price = daily_detail.get('close_pric')
-        time.sleep(0.2)
+        time.sleep(1)
 
         detailed_stocks.append({
             'stock_code': stock_code,
@@ -286,6 +287,7 @@ if __name__ == "__main__":
     token = get_access_token()
     if token:
         kospi_stocks = get_all_stocks(token, '0', 'KOSPI')
+        time.sleep(1)
         kosdaq_stocks = get_all_stocks(token, '10', 'KOSDAQ')
         all_combined_stocks = kospi_stocks + kosdaq_stocks
 

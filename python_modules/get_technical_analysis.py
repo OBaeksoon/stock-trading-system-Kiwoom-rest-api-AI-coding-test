@@ -11,52 +11,53 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(PROJECT_ROOT)
 
 # kiwoom_api 모듈 임포트
-from python_modules.kiwoom_api import KiwoomAPI
+from python_modules.kiwoom_api import get_db_connection
 
 def get_daily_data_with_indicators(stock_code, days=100):
     """
     지정된 종목의 일봉 데이터와 기술적 분석 지표를 반환합니다.
     """
     try:
-        api = KiwoomAPI()
+        conn = get_db_connection()
+        if conn is None:
+            return pd.DataFrame()
         
-        # 오늘 날짜를 YYYYMMDD 형식으로
-        end_date = datetime.now().strftime('%Y%m%d')
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT chart_data FROM stock_chart_data WHERE stock_code = ? AND chart_type = 'daily'",
+            (stock_code,)
+        )
+        result = cursor.fetchone()
         
-        # pyheroapi의 국내주식기간별시세 함수 호출 (가정)
-        # 실제 함수명과 파라미터는 pyheroapi 문서에 따라야 합니다.
-        # 여기서는 '출력구분'을 2(수정주가)로 가정합니다.
-        df = api.get_price_history(stock_code, 'D', end_date, '2')
-
+        if not result or not result[0]:
+            return pd.DataFrame()
+        
+        # JSON 데이터를 파싱
+        chart_data = json.loads(result[0])
+        
+        # DataFrame으로 변환
+        df = pd.DataFrame(chart_data)
+        
         if df.empty:
             return pd.DataFrame()
-
-        # 데이터프레임 컬럼명 변경 (예: 'stck_clpr' -> 'close')
-        # 실제 API 응답에 맞게 컬럼명을 확인하고 맞춰야 합니다.
-        df.rename(columns={
-            'stck_bsop_date': 'date',
-            'stck_oprc': 'open',
-            'stck_hgpr': 'high',
-            'stck_lwpr': 'low',
-            'stck_clpr': 'close',
-            'acml_vol': 'volume'
-        }, inplace=True)
-
-        # 데이터 타입 변환
-        for col in ['open', 'high', 'low', 'close', 'volume']:
-            df[col] = pd.to_numeric(df[col])
-
-        # 날짜를 기준으로 정렬
-        df['date'] = pd.to_datetime(df['date'])
+        
+        # 날짜 컬럼 처리
+        df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
         
+        # 데이터 타입 변환
+        for col in ['open', 'high', 'low', 'close', 'volume']:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
         # 기술적 지표 계산
-        df.ta.sma(length=20, append=True)
-        df.ta.rsi(length=14, append=True)
-        df.ta.macd(fast=12, slow=26, signal=9, append=True)
-        df.ta.bbands(length=20, std=2, append=True)
-
-        # 최근 100일 데이터만 선택
+        if len(df) >= 20:  # 최소 20일 데이터 필요
+            df.ta.sma(length=20, append=True)
+            df.ta.rsi(length=14, append=True)
+            df.ta.macd(fast=12, slow=26, signal=9, append=True)
+            df.ta.bbands(length=20, std=2, append=True)
+        
+        # 최근 N일 데이터만 선택
         df = df.tail(days)
         
         # NaN 값 처리
@@ -68,9 +69,12 @@ def get_daily_data_with_indicators(stock_code, days=100):
         return df
 
     except Exception as e:
-        # 오류 발생 시 빈 데이터프레임 반환
-        # print(f"Error in get_daily_data_with_indicators: {e}", file=sys.stderr)
+        print(f"Error in get_daily_data_with_indicators: {e}", file=sys.stderr)
         return pd.DataFrame()
+    finally:
+        if 'conn' in locals() and conn:
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

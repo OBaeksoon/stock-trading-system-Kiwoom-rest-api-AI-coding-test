@@ -85,17 +85,27 @@ $conn->close();
         .stock-info { font-weight: bold; color: #28a745; margin-right: 10px; }
         .message { text-align: center; color: #6c757d; font-size: 1.1em; padding: 40px 0; }
         .home-link { display: block; text-align: center; margin-top: 30px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .search-suggestions { position: absolute; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; width: 50%; z-index: 1000; display: none; }
+        .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .suggestion-item:hover { background-color: #f8f9fa; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .search-container { position: relative; display: inline-block; width: 100%; }
+        .loading { color: #666; font-style: italic; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>종목별 뉴스 검색</h1>
         <div class="search-form">
-            <form action="" method="GET">
-                <input type="text" name="search_query" placeholder="종목명 또는 코드를 입력하세요" value="<?php echo htmlspecialchars($search_query); ?>">
+            <form action="" method="GET" id="searchForm">
+                <div class="search-container">
+                    <input type="text" name="search_query" id="searchInput" placeholder="종목명 또는 코드를 입력하세요" value="<?php echo htmlspecialchars($search_query); ?>" autocomplete="off">
+                    <div id="suggestions" class="search-suggestions"></div>
+                </div>
                 <input type="submit" value="검색">
             </form>
         </div>
+        <div id="newsResults">
 
         <?php if (!empty($search_query)): ?>
             <h2>'<?php echo htmlspecialchars($search_query); ?>'에 대한 검색 결과</h2>
@@ -114,7 +124,106 @@ $conn->close();
             <p class="message">상단 검색창을 통해 원하시는 종목의 뉴스를 찾아보세요.</p>
         <?php endif; ?>
         
+        </div>
         <a href="index.php" class="home-link">메인으로 돌아가기</a>
     </div>
+
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const suggestions = document.getElementById('suggestions');
+        const newsResults = document.getElementById('newsResults');
+
+        // 실시간 검색 기능
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length >= 1) {
+                searchTimeout = setTimeout(() => {
+                    searchStocks(query);
+                    searchNews(query);
+                }, 300);
+            } else {
+                suggestions.style.display = 'none';
+                newsResults.innerHTML = '<p class="message">상단 검색창을 통해 원하시는 종목의 뉴스를 찾아보세요.</p>';
+            }
+        });
+
+        // 종목 자동완성 검색
+        function searchStocks(query) {
+            fetch('search_stocks.php?q=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        let html = '';
+                        data.forEach(stock => {
+                            html += `<div class="suggestion-item" onclick="selectStock('${stock.code}', '${stock.name}')">${stock.name} (${stock.code})</div>`;
+                        });
+                        suggestions.innerHTML = html;
+                        suggestions.style.display = 'block';
+                    } else {
+                        suggestions.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    suggestions.style.display = 'none';
+                });
+        }
+
+        // 뉴스 실시간 검색
+        function searchNews(query) {
+            newsResults.innerHTML = '<p class="loading">검색 중...</p>';
+            
+            fetch('search_news.php?q=' + encodeURIComponent(query))
+                .then(response => response.text())
+                .then(html => {
+                    newsResults.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    newsResults.innerHTML = '<p class="message">검색 중 오류가 발생했습니다.</p>';
+                });
+        }
+
+        // 종목 선택
+        function selectStock(code, name) {
+            searchInput.value = name;
+            suggestions.style.display = 'none';
+            searchNews(name);
+        }
+
+        // 외부 클릭 시 자동완성 숨기기
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        // 초기 로드 시 기존 검색어가 있으면 결과 표시
+        <?php if (!empty($search_query)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialContent = `
+                <h2>'<?php echo htmlspecialchars($search_query); ?>'에 대한 검색 결과</h2>
+                <?php if (!empty($news_list)): ?>
+                    <?php foreach ($news_list as $row): ?>
+                        <div class="news-item">
+                            <div class="news-meta"><span class="stock-info"><?php echo htmlspecialchars($row['stock_name']); ?> (<?php echo htmlspecialchars($row['stock_code']); ?>)</span><?php echo htmlspecialchars($row['pub_date']); ?></div>
+                            <div class="news-title"><a href="<?php echo htmlspecialchars($row['link']); ?>" target="_blank"><?php echo htmlspecialchars($row['title']); ?></a></div>
+                            <div class="news-description"><?php echo htmlspecialchars($row['description']); ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="message">해당 종목에 대한 뉴스를 찾을 수 없습니다.</p>
+                <?php endif; ?>
+            `;
+            newsResults.innerHTML = initialContent;
+        });
+        <?php else: ?>
+        newsResults.innerHTML = '<p class="message">상단 검색창을 통해 원하시는 종목의 뉴스를 찾아보세요.</p>';
+        <?php endif; ?>
+    </script>
 </body>
 </html>
