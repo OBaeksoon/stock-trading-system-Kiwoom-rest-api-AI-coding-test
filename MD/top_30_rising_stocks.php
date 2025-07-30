@@ -3,73 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상승률 30위 종목</title>
+    <title>실시간 상승률 30위 종목</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #0056b3; }
-        pre { background-color: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; }
-        .error { color: red; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .home-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        .stats-bar {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        .stock-grid {
+            display: grid;
+            gap: 20px;
+            padding: 30px;
+        }
+        .stock-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .stock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .stock-rank {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .stock-name {
+            flex: 1;
+            margin-left: 15px;
+        }
+        .stock-name h3 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+        .stock-code {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .stock-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .metric-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .price { color: #2c3e50; }
+        .change { color: #e74c3c; }
+        .volume { color: #3498db; }
+        .news-section {
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        .news-title {
+            color: #34495e;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .news-title::before {
+            content: '📰';
+            margin-right: 8px;
+        }
+        .news-list {
+            list-style: none;
+        }
+        .news-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f2f6;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+            line-height: 1.4;
+            transition: color 0.3s ease;
+        }
+        .news-link:hover {
+            color: #667eea;
+        }
+        .theme-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+        .news-date {
+            color: #95a5a6;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+        .no-news {
+            color: #95a5a6;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        .update-section {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            margin: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .update-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .update-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .stock-metrics { grid-template-columns: 1fr; }
+            .stock-header { flex-direction: column; text-align: center; }
+            .stock-name { margin-left: 0; margin-top: 10px; }
+        }
     </style>
 </head>
 <body>
+    <a href="../index.php" class="home-btn">🏠 메인으로</a>
+    <div class="header">
+        <h1>📈 실시간 상승률 30위</h1>
+    </div>
     <div class="container">
-        <h1>모의투자 상승률 30위 종목</h1>
         <?php
+        // 데이터베이스 연결
+        $config = parse_ini_file('../config.ini');
+        $conn = new mysqli($config['HOST'], $config['USER'], $config['PASSWORD'], $config['DATABASE'], $config['PORT']);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        // Python 스크립트 실행
         $python_script = '/home/stock/public_html/python_modules/get_top_30_rising_stocks.py';
         $command = 'python3 ' . escapeshellarg($python_script) . ' 2>&1';
-
-        // Execute the Python script
         $output = shell_exec($command);
-
-        // Decode the JSON output
         $data = json_decode($output, true);
 
-        if (json_last_error() === JSON_ERROR_NONE) {
-            if (is_array($data) && !empty($data) && $data[0] !== None) {
-                // Check if the first element is an error or actual data
-                if (isset($data[0]["error"])) {
-                    echo "<p class=\"error\">오류 발생: " . htmlspecialchars($data[0]["error"]) . "</p>";
-                    if (isset($data[0]["return_msg"])) {
-                        echo "<p class=\"error\">" . htmlspecialchars($data[0]["return_msg"]) . "</p>";
-                    }
-                    echo "<pre class=\"error\">" . htmlspecialchars($output) . "</pre>";
-                } else {
-                    echo "<p>성공적으로 상승률 30위 종목을 불러왔습니다:</p>";
-                    echo "<table>";
-                    echo "<tr><th>종목코드</th><th>종목명</th><th>현재가</th><th>등락률</th><th>거래량</th></tr>";
-                    foreach ($data as $stock) {
-                        if (is_array($stock) && isset($stock['stk_cd']) && isset($stock['stk_nm'])) {
-                            echo "<tr>";
-                            echo "<td>" . htmlspecialchars($stock['stk_cd']) . "</td>";
-                            echo "<td>" . htmlspecialchars($stock['stk_nm']) . "</td>";
-                            echo "<td>" . htmlspecialchars($stock['cur_prc']) . "</td>";
-                            echo "<td>" . htmlspecialchars($stock['flu_rt']) . "</td>";
-                            echo "<td>" . htmlspecialchars($stock['trde_qty']) . "</td>";
-                            echo "</tr>";
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+            if (!empty($data) && isset($data[0]["error"])) {
+                echo "<p class=\"error\">API 오류: " . htmlspecialchars($data[0]["error"]) . "</p>";
+            } else if (!empty($data) && isset($data[0]['stk_cd'])) {
+                echo "<div class='stats-bar'>📊 총 " . count($data) . "개 종목 | 실시간 업데이트 " . date('Y-m-d H:i') . "</div>";
+                echo "<div class='stock-grid'>";
+                
+                $rank = 1;
+                foreach ($data as $stock) {
+                    if (is_array($stock) && isset($stock['stk_cd']) && isset($stock['stk_nm'])) {
+                        echo "<div class='stock-card'>";
+                        echo "<div class='stock-header'>";
+                        echo "<div class='stock-rank'>" . $rank++ . "</div>";
+                        echo "<div class='stock-name'>";
+                        echo "<h3>" . htmlspecialchars($stock['stk_nm']) . "</h3>";
+                        echo "<div class='stock-code'>" . htmlspecialchars($stock['stk_cd']) . "</div>";
+                        echo "</div>";
+                        echo "</div>";
+                        
+                        echo "<div class='stock-metrics'>";
+                        echo "<div class='metric'><div class='metric-label'>현재가</div><div class='metric-value price'>" . number_format(intval($stock['cur_prc'])) . "원</div></div>";
+                        echo "<div class='metric'><div class='metric-label'>등락률</div><div class='metric-value change'>+" . htmlspecialchars($stock['flu_rt']) . "%</div></div>";
+                        echo "<div class='metric'><div class='metric-label'>거래량</div><div class='metric-value volume'>" . number_format(intval($stock['trde_qty'])) . "</div></div>";
+                        echo "</div>";
+                        
+                        // 관련 뉴스 조회
+                        $stock_code = $stock['stk_cd'];
+                        $news_query = "SELECT title, link, description, pub_date, theme FROM stock_news WHERE stock_code = ? ORDER BY pub_date DESC LIMIT 3";
+                        $stmt = $conn->prepare($news_query);
+                        $stmt->bind_param("s", $stock_code);
+                        $stmt->execute();
+                        $news_result = $stmt->get_result();
+                        
+                        echo "<div class='news-section'>";
+                        if ($news_result->num_rows > 0) {
+                            echo "<div class='news-title'>관련 뉴스</div>";
+                            echo "<ul class='news-list'>";
+                            while ($news = $news_result->fetch_assoc()) {
+                                echo "<li class='news-item'>";
+                                echo "<a href='" . htmlspecialchars($news['link']) . "' target='_blank' class='news-link'>";
+                                echo htmlspecialchars($news['title']);
+                                echo "</a>";
+                                if ($news['theme']) {
+                                    echo "<span class='theme-tag'>" . htmlspecialchars($news['theme']) . "</span>";
+                                }
+                                if ($news['pub_date']) {
+                                    echo "<span class='news-date'>" . date('m-d H:i', strtotime($news['pub_date'])) . "</span>";
+                                }
+                                echo "</li>";
+                            }
+                            echo "</ul>";
+                        } else {
+                            echo "<div class='no-news'>📭 관련 뉴스가 없습니다</div>";
                         }
+                        echo "</div>";
+                        $stmt->close();
+                        echo "</div>";
                     }
-                    echo "</table>";
                 }
-            } else if (is_array($data) && (empty($data) || $data[0] === None)) {
-                echo "<p>상승률 30위 종목 목록이 비어 있거나 데이터를 가져오지 못했습니다. (API 제한 또는 데이터 없음)</p>";
-                echo "<pre>" . htmlspecialchars($output) . "</pre>";
-            } else if (isset($data["error"])) {
-                echo "<p class=\"error\">오류 발생: " . htmlspecialchars($data["error"]) . "</p>";
-                echo "<pre class=\"error\">" . htmlspecialchars($output) . "</pre>";
+                echo "</div>";
             } else {
-                echo "<p>상승률 30위 종목 목록이 비어 있습니다.</p>";
-                echo "<pre>" . htmlspecialchars($output) . "</pre>";
+                echo "<p class=\"error\">데이터가 비어있거나 올바르지 않은 형식입니다.</p>";
             }
         } else {
-            echo "<p class=\"error\">Python 스크립트 실행 오류 또는 JSON 디코딩 실패:</p>";
-            echo "<pre class=\"error\">" . htmlspecialchars($output) . "</pre>";
-            echo "<p class=\"error\">JSON Error: " . json_last_error_msg() . "</p>";
+            echo "<p class=\"error\">JSON 파싱 실패 또는 잘못된 응답 형식</p>";
         }
+        
+        $conn->close();
         ?>
+        
+        <div class="update-section">
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">🔄 뉴스 데이터 업데이트</h3>
+            <p style="margin-bottom: 20px; color: #6c757d;">관련 뉴스가 표시되지 않는 경우 최신 뉴스를 수집할 수 있습니다</p>
+            <button onclick="updateNews()" class="update-btn">뉴스 업데이트 시작</button>
+            <div id="updateStatus" style="margin-top: 15px;"></div>
+        </div>
+        
+        <script>
+        function updateNews() {
+            document.getElementById('updateStatus').innerHTML = '<p style="color: #0056b3;">뉴스를 업데이트 중입니다. 잠시만 기다려주세요...</p>';
+            
+            fetch('update_news.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('updateStatus').innerHTML = '<p style="color: green;">뉴스 업데이트가 완료되었습니다. 페이지를 새로고침하세요.</p>';
+                })
+                .catch(error => {
+                    document.getElementById('updateStatus').innerHTML = '<p style="color: red;">업데이트 중 오류가 발생했습니다.</p>';
+                });
+        }
+        </script>
     </div>
 </body>
 </html>

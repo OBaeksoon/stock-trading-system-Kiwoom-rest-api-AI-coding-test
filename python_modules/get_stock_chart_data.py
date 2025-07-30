@@ -40,7 +40,14 @@ def calculate_moving_averages(data):
         return data
     
     df = pd.DataFrame(data)
-    df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    
+    # 키움증권 API 응답 필드명에 맞게 수정
+    if 'cur_prc' in df.columns:
+        # 현재가에서 +/- 기호 제거 후 숫자로 변환
+        df['close'] = pd.to_numeric(df['cur_prc'].astype(str).str.replace('+', '').str.replace('-', ''), errors='coerce')
+    else:
+        logger.warning("cur_prc 필드를 찾을 수 없습니다.")
+        return data
     
     # 이동평균선 기간 목록
     ma_periods = [3, 5, 10, 20, 60, 240, 480]
@@ -102,7 +109,7 @@ def collect_all_chart_data():
     
     try:
         # 전체 종목 목록 조회
-        cursor.execute("SELECT code, name FROM all_stocks LIMIT 10")  # 테스트용 10개만
+        cursor.execute("SELECT stock_code, stock_name FROM stock_details LIMIT 100")  # 100개 종목
         stocks = cursor.fetchall()
         
         logger.info(f"{len(stocks)}개 종목의 차트 데이터를 수집합니다.")
@@ -116,8 +123,8 @@ def collect_all_chart_data():
         success_count = 0
         
         for stock in stocks:
-            stock_code = stock['code']
-            stock_name = stock['name']
+            stock_code = stock['stock_code']
+            stock_name = stock['stock_name']
             
             logger.info(f"처리 중: {stock_code} ({stock_name})")
             
@@ -125,9 +132,12 @@ def collect_all_chart_data():
             for chart_type in ['daily', 'weekly', 'minute']:
                 try:
                     chart_data = fetch_chart_data_from_api(token, stock_code, chart_type)
-                    if chart_data:
+                    if chart_data and len(chart_data) > 0:
                         save_chart_data_to_db(cursor, stock_code, chart_type, chart_data)
                         success_count += 1
+                        # 성공 로그는 생략
+                    else:
+                        logger.warning(f"{stock_code} {chart_type} 데이터 없음")
                 except Exception as e:
                     logger.error(f"{stock_code} {chart_type} 차트 데이터 수집 실패: {e}")
         
@@ -143,6 +153,7 @@ def collect_all_chart_data():
 def fetch_chart_data_from_api(token, stock_code, chart_type):
     """키움증권 API에서 차트 데이터를 가져옵니다."""
     import requests
+    from datetime import datetime
     
     # config.ini에서 BASE_URL 읽기
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -152,30 +163,42 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
     base_url = config.get('API', 'BASE_URL')
     
     url = f"{base_url}/api/dostk/chart"
-    headers = {
-        'authorization': f'Bearer {token}',
-        'api-id': 'ka10001',
-        'Content-Type': 'application/json;charset=UTF-8'
-    }
     
-    # 차트 종류에 따른 데이터 설정
+    # 차트 종류에 따른 API ID와 데이터 설정
+    today = datetime.now().strftime('%Y%m%d')
+    
     if chart_type == 'daily':
+        headers = {
+            'authorization': f'Bearer {token}',
+            'api-id': 'ka10081',  # 주식일봉차트조회요청
+            'Content-Type': 'application/json;charset=UTF-8'
+        }
         data = {
             "stk_cd": stock_code,
-            "prd_tp": "D",  # 일봉
-            "prd_cnt": "100"  # 100일
+            "base_dt": today,
+            "upd_stkpc_tp": "1"
         }
     elif chart_type == 'weekly':
+        headers = {
+            'authorization': f'Bearer {token}',
+            'api-id': 'ka10082',  # 주식주봉차트조회요청
+            'Content-Type': 'application/json;charset=UTF-8'
+        }
         data = {
             "stk_cd": stock_code,
-            "prd_tp": "W",  # 주봉
-            "prd_cnt": "50"  # 50주
+            "base_dt": today,
+            "upd_stkpc_tp": "1"
         }
     else:  # minute
+        headers = {
+            'authorization': f'Bearer {token}',
+            'api-id': 'ka10080',  # 주식분봉차트조회요청
+            'Content-Type': 'application/json;charset=UTF-8'
+        }
         data = {
             "stk_cd": stock_code,
-            "prd_tp": "M",  # 분봉
-            "prd_cnt": "100"  # 100분
+            "tic_scope": "1",  # 1분봉
+            "upd_stkpc_tp": "1"
         }
     
     try:
@@ -183,7 +206,19 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
         if response.status_code == 200:
             result = response.json()
             if result.get('return_code') == 0:
-                return result.get('chart_data', [])
+                # 차트 종류에 따른 데이터 추출
+                if chart_type == 'daily':
+                    chart_data = result.get('stk_dt_pole_chart_qry', [])
+                elif chart_type == 'weekly':
+                    chart_data = result.get('stk_wk_pole_chart_qry', [])
+                else:  # minute
+                    chart_data = result.get('stk_min_pole_chart_qry', [])
+                
+                return chart_data
+            else:
+                logger.warning(f"API 오류: {result.get('return_msg', 'Unknown error')}")
+        else:
+            logger.error(f"HTTP 오류: {response.status_code}, 응답: {response.text}")
         return None
     except Exception as e:
         logger.error(f"API 호출 오류: {e}")
