@@ -23,6 +23,10 @@
 - **search_stock_by_name.php** - 종목명으로 검색
 - **get_stock_details.php** - 종목 상세 정보 API
 
+#### 실시간 상승률 분석 (NEW!)
+- **MD/top_30_rising_stocks.php** - 실시간 상승률 30위 종목 표시
+- **MD/update_news.php** - 뉴스 데이터 업데이트 API
+
 #### 뉴스 관련
 - **display_stock_news.php** - 종목별 뉴스 표시
 - **search_news.php** - 뉴스 검색 기능
@@ -43,6 +47,10 @@
 - **get_stock_chart_data.py** - 차트 데이터 수집
 - **get_stock_code_by_name.py** - 종목명으로 코드 조회
 - **get_technical_analysis.py** - 기술적 지표 분석
+
+#### 실시간 상승률 분석 (NEW!)
+- **get_top_30_rising_stocks.py** - 실시간 상승률 30위 종목 조회
+- **get_top_30_themes_news.py** - 상위 종목 관련 뉴스 수집 및 테마 분류
 
 #### 뉴스 분석
 - **naver_news_collector.py** - 네이버 뉴스 수집
@@ -90,12 +98,20 @@
 - 실시간 차트 데이터
 - 기술적 지표 분석
 
-### 2. 뉴스 분석
+### 2. 실시간 상승률 분석 ⭐ NEW!
+- **실서버 키움증권 API 연동**으로 실시간 상승률 30위 종목 조회
+- 종목별 관련 뉴스 자동 수집 및 표시
+- AI 기반 테마 자동 분류
+- 현대적이고 반응형 카드 기반 UI
+- 고정 메인 페이지 이동 버튼
+- 원클릭 뉴스 업데이트 기능
+
+### 3. 뉴스 분석
 - 종목별 뉴스 수집 (네이버 뉴스 API)
 - AI 기반 테마 분류
 - 키움증권 API 테마 정보 연동
 
-### 3. 데이터 시각화
+### 4. 데이터 시각화
 - 인터랙티브 차트 (Chart.js)
 - 반응형 웹 인터페이스
 - 실시간 데이터 업데이트
@@ -142,6 +158,12 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 # 전체 종목 정보 수집
 python python_modules/get_all_stocks_to_db.py
 
+# 실시간 상승률 30위 종목 조회
+python python_modules/get_top_30_rising_stocks.py
+
+# 상위 종목 뉴스 수집 및 테마 분류
+python python_modules/get_top_30_themes_news.py
+
 # 뉴스 수집 및 분류
 python python_modules/naver_news_collector.py
 python python_modules/theme_classifier.py
@@ -152,13 +174,28 @@ python python_modules/theme_classifier.py
 ### 주요 테이블
 - **all_stocks** - 전체 종목 정보
 - **stock_details** - 종목 상세 정보
-- **stock_news** - 종목별 뉴스
+- **stock_news** - 종목별 뉴스 (테마 분류 포함)
+- **top_30_rising_stocks** - 상승률 30위 종목 (NEW!)
 - **settings** - 시스템 설정 (API 키 등)
 
 ## 🔐 보안 고려사항
 - API 키는 데이터베이스에 암호화 저장
 - CSRF 토큰을 통한 보안 강화
 - SQL 인젝션 방지를 위한 Prepared Statement 사용
+
+## 🆕 최신 업데이트 (2025-07-30)
+
+### 실시간 상승률 30위 종목 페이지 개발 완료
+- ✅ 실서버 키움증권 API 연동하여 실시간 데이터 조회
+- ✅ 종목별 관련 뉴스 자동 수집 및 테마 분류
+- ✅ 현대적이고 반응형 UI 디자인 (그라데이션, 카드 레이아웃)
+- ✅ 고정 메인 페이지 이동 버튼 (스크롤 시에도 항상 표시)
+- ✅ 원클릭 뉴스 업데이트 기능
+- ✅ 모바일 최적화 반응형 디자인
+
+### 접근 방법
+1. 메인 대시보드에서 "실시간 상승률 30위 종목" 클릭
+2. 또는 직접 URL: `/MD/top_30_rising_stocks.php`
 
 ## 📝 라이선스
 이 프로젝트는 개인 사용 목적으로 제작되었습니다.
