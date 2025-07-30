@@ -5,3 +5,4 @@ gemini generate --model gemini-2.0-flash
 gemini generate --model gemini-1.5-flash
 
 npm install -g @google/gemini-cli to update 
+qwen 현제 시골집에서는 실행불가 AIP키 입력 해야함
