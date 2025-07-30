@@ -137,10 +137,18 @@ def get_all_stocks(token, market_type_code, market_name):
                 logger.warning(f"API 응답에 'output1' 또는 'list' 필드가 없거나 유효한 리스트가 아닙니다. 응답: {response_data}")
                 break
 
-        all_stocks.extend([
-            {'stock_code': s.get('code') or s.get('stk_cd'), 'stock_name': s.get('name') or s.get('stk_nm'), 'market': market_name}
-            for s in stocks if s.get('code') or s.get('stk_cd')
-        ])
+        for s in stocks:
+            stock_code = s.get('code') or s.get('stk_cd')
+            stock_name = s.get('name') or s.get('stk_nm')
+            
+            if stock_code and stock_name:  # 둘 다 존재할 때만 추가
+                all_stocks.append({
+                    'stock_code': stock_code,
+                    'stock_name': stock_name,
+                    'market': market_name
+                })
+            else:
+                logger.warning(f"종목 정보 누락: code={s.get('code')}, stk_cd={s.get('stk_cd')}, name={s.get('name')}, stk_nm={s.get('stk_nm')}")
 
         cont_yn = response_data.get('cont_yn', 'N')
         next_key = response_data.get('next_key', '')
@@ -177,7 +185,11 @@ def save_stocks_to_db(stocks):
             market = VALUES(market),
             updated_at = CURRENT_TIMESTAMP
         """
-        data_to_insert = [(s['stock_code'], s['stock_name'], s['market']) for s in stocks]
+        data_to_insert = [
+            (s['stock_code'], s['stock_name'], s['market']) 
+            for s in stocks 
+            if s.get('stock_code') and s.get('stock_name') and s.get('market')
+        ]
         
         if data_to_insert:
             cursor.executemany(insert_query, data_to_insert)
@@ -222,6 +234,7 @@ def save_stock_details_to_db(stocks_details):
         data_to_insert = [
             (s['stock_code'], s.get('current_price'), s.get('previous_day_closing_price'), s.get('circulating_shares'))
             for s in stocks_details
+            if s.get('stock_code')  # stock_code가 있을 때만 추가
         ]
         
         if data_to_insert:
