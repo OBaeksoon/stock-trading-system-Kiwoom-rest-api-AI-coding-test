@@ -72,6 +72,12 @@ def setup_database():
             )
         """)
         logger.info("stock_news 테이블 생성 완료.")
+        # theme 컬럼이 존재하지 않으면 추가합니다.
+        cursor.execute("""
+            ALTER TABLE stock_news
+            ADD COLUMN IF NOT EXISTS theme VARCHAR(255)
+        """)
+        logger.info("stock_news 테이블에 theme 컬럼 추가 완료.")
 
         # 3. `stock_details` 테이블 생성
         logger.info("`stock_details` 테이블을 생성합니다...")
@@ -110,6 +116,56 @@ def setup_database():
         cursor.executemany(insert_query, api_settings)
         conn.commit()
         logger.info("API 키 저장 완료.")
+
+        # 4. 미국 주식 관련 테이블 생성
+        logger.info("`us_indices` 테이블을 생성합니다...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS us_indices (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                ticker VARCHAR(20) NOT NULL,
+                last_price DECIMAL(12, 2),
+                change_val DECIMAL(12, 2),
+                percent_change DECIMAL(8, 2),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_ticker (ticker)
+            )
+        """)
+        logger.info("`us_indices` 테이블 생성 완료.")
+
+        logger.info("`us_top_stocks` 테이블을 생성/수정합니다...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS us_top_stocks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ticker VARCHAR(20) NOT NULL,
+                company_name VARCHAR(255),
+                last_price DECIMAL(12, 2),
+                change_val DECIMAL(12, 2),
+                percent_change DECIMAL(8, 2),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_ticker (ticker)
+            )
+        """)
+        # theme 컬럼이 존재하지 않으면 추가합니다.
+        cursor.execute("""
+            ALTER TABLE us_top_stocks
+            ADD COLUMN IF NOT EXISTS theme VARCHAR(255)
+        """)
+        logger.info("`us_top_stocks` 테이블 준비 완료.")
+
+        logger.info("`top_30_rising_stocks` 테이블을 생성합니다...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS top_30_rising_stocks (
+                rank INT PRIMARY KEY,
+                stock_code VARCHAR(20) NOT NULL,
+                stock_name VARCHAR(255) NOT NULL,
+                current_price INT,
+                change_rate FLOAT,
+                volume BIGINT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        """)
+        logger.info("`top_30_rising_stocks` 테이블 생성 완료.")
 
     except (configparser.NoSectionError, configparser.NoOptionError) as e:
         logger.error(f"config.ini 파일에서 [API] 정보를 읽는 중 오류 발생: {e}")

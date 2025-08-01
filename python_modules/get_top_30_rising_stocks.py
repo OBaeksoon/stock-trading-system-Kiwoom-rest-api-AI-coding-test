@@ -179,7 +179,9 @@ def get_top_30_rising_stocks(token):
             processed_stocks.sort(key=lambda x: float(x['flu_rt']), reverse=True)
             
             logger.info(f"실서버 API에서 {len(processed_stocks)}개 종목 데이터를 가져왔습니다.")
-            return processed_stocks[:30]  # 상위 30개만 반환
+            top_30_stocks = processed_stocks[:30]
+            save_top_30_rising_stocks_to_db(top_30_stocks) # DB 저장 함수 호출
+            return top_30_stocks  # 상위 30개만 반환
         else:
             error_msg = result.get('return_msg', 'Unknown error')
             logger.error(f"API 오류: {error_msg}")
@@ -191,6 +193,52 @@ def get_top_30_rising_stocks(token):
     except json.JSONDecodeError as e:
         logger.error(f"JSON 파싱 오류: {e}")
         return [{"error": f"JSON 파싱 오류: {str(e)}"}]
+
+def save_top_30_rising_stocks_to_db(stocks_data):
+    """상승률 상위 30위 종목 데이터를 데이터베이스에 저장합니다."""
+    conn = get_db_connection()
+    if conn is None:
+        logger.error("DB 연결을 가져올 수 없어 상승률 상위 종목 데이터를 저장할 수 없습니다.")
+        return
+
+    try:
+        cursor = conn.cursor()
+        # 기존 데이터 삭제
+        cursor.execute("DELETE FROM top_30_rising_stocks")
+        logger.info("기존 top_30_rising_stocks 데이터 삭제 완료.")
+
+        # 새 데이터 삽입
+        insert_query = """
+            INSERT INTO top_30_rising_stocks 
+            (rank, stock_code, stock_name, current_price, change_rate, volume) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        for i, stock in enumerate(stocks_data, 1):
+            try:
+                rank = i
+                stock_code = stock.get('stk_cd', '')
+                stock_name = stock.get('stk_nm', '')
+                current_price = int(stock.get('cur_prc', 0))
+                change_rate = float(stock.get('flu_rt', 0.0))
+                volume = int(stock.get('trde_qty', 0))
+                
+                cursor.execute(insert_query, (rank, stock_code, stock_name, current_price, change_rate, volume))
+            except ValueError as ve:
+                logger.error(f"데이터 변환 오류: {ve} - 데이터: {stock}")
+                continue
+            except Exception as e:
+                logger.error(f"데이터 삽입 중 오류 발생: {e} - 데이터: {stock}")
+                continue
+
+        conn.commit()
+        logger.info(f"{len(stocks_data)}개의 상승률 상위 종목 데이터를 DB에 성공적으로 저장했습니다.")
+    except mysql.connector.Error as err:
+        logger.error(f"상승률 상위 종목 데이터 DB 저장 중 오류 발생: {err}")
+        conn.rollback()
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
 
 def main():
     """메인 함수 - 상승률 상위 30위 종목을 조회하고 JSON으로 출력합니다."""

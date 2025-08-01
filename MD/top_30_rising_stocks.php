@@ -252,77 +252,73 @@
             die("Connection failed: " . $conn->connect_error);
         }
 
-        // Python 스크립트 실행
-        $python_script = '/home/stock/public_html/python_modules/get_top_30_rising_stocks.py';
-        $command = 'python3 ' . escapeshellarg($python_script) . ' 2>&1';
-        $output = shell_exec($command);
-        $data = json_decode($output, true);
+        // 데이터베이스에서 상승률 상위 30위 종목 데이터 조회
+        $sql = "SELECT rank, stock_code, stock_name, current_price, change_rate, volume, updated_at FROM top_30_rising_stocks ORDER BY rank ASC";
+        $result = $conn->query($sql);
 
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-            if (!empty($data) && isset($data[0]["error"])) {
-                echo "<p class=\"error\">API 오류: " . htmlspecialchars($data[0]["error"]) . "</p>";
-            } else if (!empty($data) && isset($data[0]['stk_cd'])) {
-                echo "<div class='stats-bar'>📊 총 " . count($data) . "개 종목 | 실시간 업데이트 " . date('Y-m-d H:i') . "</div>";
-                echo "<div class='stock-grid'>";
-                
-                $rank = 1;
-                foreach ($data as $stock) {
-                    if (is_array($stock) && isset($stock['stk_cd']) && isset($stock['stk_nm'])) {
-                        echo "<div class='stock-card'>";
-                        echo "<div class='stock-header'>";
-                        echo "<div class='stock-rank'>" . $rank++ . "</div>";
-                        echo "<div class='stock-name'>";
-                        echo "<h3>" . htmlspecialchars($stock['stk_nm']) . "</h3>";
-                        echo "<div class='stock-code'>" . htmlspecialchars($stock['stk_cd']) . "</div>";
-                        echo "</div>";
-                        echo "</div>";
-                        
-                        echo "<div class='stock-metrics'>";
-                        echo "<div class='metric'><div class='metric-label'>현재가</div><div class='metric-value price'>" . number_format(intval($stock['cur_prc'])) . "원</div></div>";
-                        echo "<div class='metric'><div class='metric-label'>등락률</div><div class='metric-value change'>+" . htmlspecialchars($stock['flu_rt']) . "%</div></div>";
-                        echo "<div class='metric'><div class='metric-label'>거래량</div><div class='metric-value volume'>" . number_format(intval($stock['trde_qty'])) . "</div></div>";
-                        echo "</div>";
-                        
-                        // 관련 뉴스 조회
-                        $stock_code = $stock['stk_cd'];
-                        $news_query = "SELECT title, link, description, pub_date, theme FROM stock_news WHERE stock_code = ? ORDER BY pub_date DESC LIMIT 3";
-                        $stmt = $conn->prepare($news_query);
-                        $stmt->bind_param("s", $stock_code);
-                        $stmt->execute();
-                        $news_result = $stmt->get_result();
-                        
-                        echo "<div class='news-section'>";
-                        if ($news_result->num_rows > 0) {
-                            echo "<div class='news-title'>관련 뉴스</div>";
-                            echo "<ul class='news-list'>";
-                            while ($news = $news_result->fetch_assoc()) {
-                                echo "<li class='news-item'>";
-                                echo "<a href='" . htmlspecialchars($news['link']) . "' target='_blank' class='news-link'>";
-                                echo htmlspecialchars($news['title']);
-                                echo "</a>";
-                                if ($news['theme']) {
-                                    echo "<span class='theme-tag'>" . htmlspecialchars($news['theme']) . "</span>";
-                                }
-                                if ($news['pub_date']) {
-                                    echo "<span class='news-date'>" . date('m-d H:i', strtotime($news['pub_date'])) . "</span>";
-                                }
-                                echo "</li>";
-                            }
-                            echo "</ul>";
-                        } else {
-                            echo "<div class='no-news'>📭 관련 뉴스가 없습니다</div>";
-                        }
-                        echo "</div>";
-                        $stmt->close();
-                        echo "</div>";
-                    }
-                }
-                echo "</div>";
-            } else {
-                echo "<p class=\"error\">데이터가 비어있거나 올바르지 않은 형식입니다.</p>";
+        if ($result->num_rows > 0) {
+            $data = [];
+            while($row = $result->fetch_assoc()) {
+                $data[] = $row;
             }
+
+            echo "<div class='stats-bar'>📊 총 " . count($data) . "개 종목 | 마지막 업데이트 " . date('Y-m-d H:i', strtotime($data[0]['updated_at'])) . "</div>";
+            echo "<div class='stock-grid'>";
+            
+            foreach ($data as $stock) {
+                if (is_array($stock) && isset($stock['stock_code']) && isset($stock['stock_name'])) {
+                    echo "<div class='stock-card'>";
+                    echo "<div class='stock-header'>";
+                    echo "<div class='stock-rank'>" . htmlspecialchars($stock['rank']) . "</div>";
+                    echo "<div class='stock-name'>";
+                    echo "<h3>" . htmlspecialchars($stock['stock_name']) . "</h3>";
+                    echo "<div class='stock-code'>" . htmlspecialchars($stock['stock_code']) . "</div>";
+                    echo "</div>";
+                    echo "</div>";
+                    
+                    echo "<div class='stock-metrics'>";
+                    echo "<div class='metric'><div class='metric-label'>현재가</div><div class='metric-value price'>" . number_format(intval($stock['current_price'])) . "원</div></div>";
+                    echo "<div class='metric'><div class='metric-label'>등락률</div><div class='metric-value change'>" . ($stock['change_rate'] >= 0 ? '+' : '') . htmlspecialchars($stock['change_rate']) . "%</div></div>";
+                    echo "<div class='metric'><div class='metric-label'>거래량</div><div class='metric-value volume'>" . number_format(intval($stock['volume'])) . "</div></div>";
+                    echo "</div>";
+                    
+                    // 관련 뉴스 조회
+                    $stock_code = $stock['stock_code'];
+                    $news_query = "SELECT title, link, description, pub_date, theme FROM stock_news WHERE stock_code = ? ORDER BY pub_date DESC LIMIT 3";
+                    $stmt = $conn->prepare($news_query);
+                    $stmt->bind_param("s", $stock_code);
+                    $stmt->execute();
+                    $news_result = $stmt->get_result();
+                    
+                    echo "<div class='news-section'>";
+                    if ($news_result->num_rows > 0) {
+                        echo "<div class='news-title'>관련 뉴스</div>";
+                        echo "<ul class='news-list'>";
+                        while ($news = $news_result->fetch_assoc()) {
+                            echo "<li class='news-item'>";
+                            echo "<a href='" . htmlspecialchars($news['link']) . "' target='_blank' class='news-link'>";
+                            echo htmlspecialchars($news['title']);
+                            echo "</a>";
+                            if ($news['theme']) {
+                                echo "<span class='theme-tag'>" . htmlspecialchars($news['theme']) . "</span>";
+                            }
+                            if ($news['pub_date']) {
+                                echo "<span class='news-date'>" . date('m-d H:i', strtotime($news['pub_date'])) . "</span>";
+                            }
+                            echo "</li>";
+                        }
+                        echo "</ul>";
+                    } else {
+                        echo "<div class='no-news'>📭 관련 뉴스가 없습니다</div>";
+                    }
+                    echo "</div>";
+                    $stmt->close();
+                    echo "</div>";
+                }
+            }
+            echo "</div>";
         } else {
-            echo "<p class=\"error\">JSON 파싱 실패 또는 잘못된 응답 형식</p>";
+            echo "<p class="error">장중에 데이터가 업데이트됩니다.</p>";
         }
         
         $conn->close();
