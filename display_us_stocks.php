@@ -95,7 +95,7 @@
                         $like_conditions[] = "theme LIKE CONCAT('%', ?, '%')";
                         $bind_params[] = $theme;
                     }
-                    $sql_related = "SELECT DISTINCT stock_name FROM stock_news WHERE " . implode(' OR ', $like_conditions) . " ORDER BY stock_name LIMIT 10";
+                    $sql_related = "SELECT DISTINCT a.stock_name FROM stock_news sn JOIN all_stocks a ON sn.stock_code = a.stock_code WHERE " . implode(' OR ', $like_conditions) . " ORDER BY a.stock_name LIMIT 10";
                     
                     $stmt = $conn->prepare($sql_related);
                     
