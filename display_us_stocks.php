@@ -38,6 +38,44 @@
         }
         $conn->set_charset("utf8mb4");
 
+        // 종목코드를 종목명으로 변환하는 함수
+        function getStockName($stock_code) {
+            // 주요 종목코드 매핑 (예시)
+            $stock_names = [
+                '000020' => '동화약품',
+                '000040' => 'KR모터스',
+                '000050' => '경방',
+                '000070' => '삼성중공업',
+                '000075' => '영풍제지',
+                '000080' => '하이트진로',
+                '000087' => '영원무역',
+                '000100' => '유한양행',
+                '000105' => '유한양행우',
+                '000120' => 'CJ대한통운',
+                '000140' => '하이트진로',
+                '000145' => '중외제약',
+                '000150' => '두산',
+                '000210' => '대림산업',
+                '000220' => '유진투자증권',
+                '000230' => '일진전기',
+                '000240' => '한국코아옵틱스',
+                '000250' => '삼전약품',
+                '000270' => '기아',
+                '000300' => '대유위니아',
+                '000430' => '대원강업',
+                '000480' => '조선선박',
+                '000490' => '대동',
+                '000700' => '유진',
+                '000950' => '전량선법',
+                '001040' => 'CJ',
+                '001060' => 'JW중외제약',
+                '001120' => '미래산업',
+                '001200' => 'GS',
+                '001340' => '백광산업'
+            ];
+            return isset($stock_names[$stock_code]) ? $stock_names[$stock_code] : $stock_code;
+        }
+
         // 영문-한글 테마 매핑 (실제 DB 테마에 맞게 수정)
         $theme_map = [
             'Technology' => ['AI & 반도체', '로봇'],
@@ -95,7 +133,7 @@
                         $like_conditions[] = "sn.theme = ?";
                         $bind_params[] = $theme;
                     }
-                    $sql_related = "SELECT DISTINCT sn.stock_code FROM stock_news sn WHERE " . implode(' OR ', $like_conditions) . " ORDER BY sn.stock_code LIMIT 10";
+                    $sql_related = "SELECT DISTINCT sn.stock_code, COALESCE(a.stock_name, sn.stock_code) as display_name FROM stock_news sn LEFT JOIN all_stocks a ON sn.stock_code = a.stock_code WHERE " . implode(' OR ', $like_conditions) . " ORDER BY display_name LIMIT 10";
                     
                     $stmt = $conn->prepare($sql_related);
                     
@@ -109,7 +147,8 @@
                     if ($related_result->num_rows > 0) {
                         echo "<ul class='related-stocks'>";
                         while($related_row = $related_result->fetch_assoc()) {
-                            echo "<li><a href='display_stock_news.php?stock_code=" . urlencode($related_row['stock_code']) . "'>" . htmlspecialchars($related_row['stock_code']) . "</a></li>";
+                            $stock_name = getStockName($related_row['stock_code']);
+                            echo "<li><a href='display_stock_news.php?stock_code=" . urlencode($related_row['stock_code']) . "'>" . htmlspecialchars($stock_name) . "</a></li>";
                         }
                         echo "</ul>";
                     } else {
