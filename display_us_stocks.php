@@ -31,10 +31,10 @@
 
         <?php
         // DB 연결
-        $config = parse_ini_file(__DIR__ . '/config.ini');
-        $conn = new mysqli($config['HOST'], $config['USER'], $config['PASSWORD'], $config['DATABASE'], $config['PORT']);
+        $config = parse_ini_file(__DIR__ . '/config.ini', true);
+        $conn = new mysqli($config['DB']['HOST'], $config['DB']['USER'], $config['DB']['PASSWORD'], $config['DB']['DATABASE'], $config['DB']['PORT']);
         if ($conn->connect_error) {
-            die("<p class=\"error\">DB 연결 실패: " . $conn->connect_error . "</p>");
+            die("<p class='error'>DB 연결 실패: " . $conn->connect_error . "</p>");
         }
         $conn->set_charset("utf8mb4");
 
