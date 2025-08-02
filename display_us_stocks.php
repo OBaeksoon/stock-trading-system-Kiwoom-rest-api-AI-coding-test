@@ -38,19 +38,19 @@
         }
         $conn->set_charset("utf8mb4");
 
-        // 영문-한글 테마 매핑
+        // 영문-한글 테마 매핑 (실제 DB 테마에 맞게 수정)
         $theme_map = [
-            'Technology' => ['반도체', '소프트웨어', 'IT', '컴퓨터', '인공지능'],
-            'Healthcare' => ['제약', '바이오', '의료기기', '헬스케어'],
-            'Financial Services' => ['금융', '증권', '은행', '보험'],
-            'Consumer Cyclical' => ['소비재', '자동차', '유통', '여행'],
-            'Industrials' => ['산업재', '기계', '조선', '운송'],
-            'Communication Services' => ['통신', '미디어', '엔터테인먼트', '게임'],
-            'Energy' => ['에너지', '정유', '가스'],
-            'Basic Materials' => ['소재', '화학', '철강'],
-            'Real Estate' => ['부동산', '건설'],
-            'Utilities' => ['유틸리티', '전력'],
-            'Consumer Defensive' => ['필수소비재', '음식료']
+            'Technology' => ['AI & 반도체', '로봇'],
+            'Healthcare' => ['헬스케어 & 바이오'],
+            'Financial Services' => ['가상자산 & 게임 & NFT'],
+            'Consumer Cyclical' => ['2차전지 & 전기차'],
+            'Industrials' => ['조선 & 전력 인프라', '우주 & 항공 & 방산'],
+            'Communication Services' => ['가상자산 & 게임 & NFT'],
+            'Energy' => ['친환경 & 원자력'],
+            'Basic Materials' => ['친환경 & 원자력'],
+            'Real Estate' => [],
+            'Utilities' => ['조선 & 전력 인프라'],
+            'Consumer Defensive' => []
         ];
 
         // --- 주요 지수 ---
@@ -87,15 +87,15 @@
                 
                 echo "<td>";
                 $us_theme = $row['theme'];
-                if (!empty($us_theme) && isset($theme_map[$us_theme])) {
+                if (!empty($us_theme) && isset($theme_map[$us_theme]) && !empty($theme_map[$us_theme])) {
                     $korean_themes = $theme_map[$us_theme];
                     $like_conditions = [];
                     $bind_params = [];
                     foreach ($korean_themes as $theme) {
-                        $like_conditions[] = "theme LIKE CONCAT('%', ?, '%')";
+                        $like_conditions[] = "sn.theme = ?";
                         $bind_params[] = $theme;
                     }
-                    $sql_related = "SELECT DISTINCT a.stock_name FROM stock_news sn JOIN all_stocks a ON sn.stock_code = a.stock_code WHERE " . implode(' OR ', $like_conditions) . " ORDER BY a.stock_name LIMIT 10";
+                    $sql_related = "SELECT DISTINCT sn.stock_code FROM stock_news sn WHERE " . implode(' OR ', $like_conditions) . " ORDER BY sn.stock_code LIMIT 10";
                     
                     $stmt = $conn->prepare($sql_related);
                     
@@ -109,7 +109,7 @@
                     if ($related_result->num_rows > 0) {
                         echo "<ul class='related-stocks'>";
                         while($related_row = $related_result->fetch_assoc()) {
-                            echo "<li><a href='display_stock_news.php?stock_name=" . urlencode($related_row['stock_name']) . "'>" . htmlspecialchars($related_row['stock_name']) . "</a></li>";
+                            echo "<li><a href='display_stock_news.php?stock_code=" . urlencode($related_row['stock_code']) . "'>" . htmlspecialchars($related_row['stock_code']) . "</a></li>";
                         }
                         echo "</ul>";
                     } else {
