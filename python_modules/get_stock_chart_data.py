@@ -167,6 +167,9 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
     # 차트 종류에 따른 API ID와 데이터 설정
     today = datetime.now().strftime('%Y%m%d')
     
+    # 수정주가 사용 (0: 무수정, 1: 수정)
+    use_adjusted_price = "1"
+    
     if chart_type == 'daily':
         headers = {
             'authorization': f'Bearer {token}',
@@ -176,7 +179,7 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
         data = {
             "stk_cd": stock_code,
             "base_dt": today,
-            "upd_stkpc_tp": "1"
+            "upd_stkpc_tp": use_adjusted_price
         }
     elif chart_type == 'weekly':
         headers = {
@@ -187,7 +190,7 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
         data = {
             "stk_cd": stock_code,
             "base_dt": today,
-            "upd_stkpc_tp": "1"
+            "upd_stkpc_tp": use_adjusted_price
         }
     else:  # minute
         headers = {
@@ -198,7 +201,7 @@ def fetch_chart_data_from_api(token, stock_code, chart_type):
         data = {
             "stk_cd": stock_code,
             "tic_scope": "1",  # 1분봉
-            "upd_stkpc_tp": "1"
+            "upd_stkpc_tp": use_adjusted_price
         }
     
     try:
