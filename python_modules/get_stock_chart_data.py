@@ -108,8 +108,8 @@ def collect_all_chart_data():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # 전체 종목 목록 조회
-        cursor.execute("SELECT stock_code, stock_name FROM stock_details LIMIT 100")  # 100개 종목
+        # 전체 종목 목록 조회 (API 제한을 고려하여 단계적 처리)
+        cursor.execute("SELECT stock_code, stock_name FROM stock_details LIMIT 500")  # 500개 종목씩 처리
         stocks = cursor.fetchall()
         
         logger.info(f"{len(stocks)}개 종목의 차트 데이터를 수집합니다.")
