@@ -24,7 +24,7 @@
 - **get_stock_details.php** - 종목 상세 정보 API
 
 #### 실시간 상승률 분석 (NEW!)
-- **MD/top_30_rising_stocks.php** - 실시간 상승률 30위 종목 표시
+- **MD/top_30_rising_stocks.php** - 실시간 상승률 30위 종목 표시 (DB 연동)
 - **MD/update_news.php** - 뉴스 데이터 업데이트 API
 
 #### 뉴스 관련
@@ -49,7 +49,7 @@
 - **get_technical_analysis.py** - 기술적 지표 분석
 
 #### 실시간 상승률 분석 (NEW!)
-- **get_top_30_rising_stocks.py** - 실시간 상승률 30위 종목 조회
+- **get_top_30_rising_stocks.py** - 실시간 상승률 30위 종목 조회 및 DB 저장
 - **get_top_30_themes_news.py** - 상위 종목 관련 뉴스 수집 및 테마 분류
 
 #### 뉴스 분석
@@ -138,7 +138,7 @@ DATABASE = stock
 PORT = 3306
 
 [API]
-BASE_URL = https://mockapi.kiwoom.com
+BASE_URL = https://api.kiwoom.com
 
 [NAVER_API]
 CLIENT_ID = your_client_id
@@ -156,17 +156,17 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 ### 4. 데이터 수집 실행
 ```bash
 # 전체 종목 정보 수집
-python python_modules/get_all_stocks_to_db.py
+python3 python_modules/get_all_stocks_to_db.py
 
 # 실시간 상승률 30위 종목 조회
-python python_modules/get_top_30_rising_stocks.py
+python3 python_modules/get_top_30_rising_stocks.py
 
 # 상위 종목 뉴스 수집 및 테마 분류
-python python_modules/get_top_30_themes_news.py
+python3 python_modules/get_top_30_themes_news.py
 
 # 뉴스 수집 및 분류
-python python_modules/naver_news_collector.py
-python python_modules/theme_classifier.py
+python3 python_modules/naver_news_collector.py
+python3 python_modules/theme_classifier.py
 ```
 
 ## 📊 데이터베이스 스키마
@@ -196,9 +196,29 @@ python python_modules/theme_classifier.py
 - ✅ updates.php 페이지 추가 (업데이트 내역 추적)
 
 ### Git 커밋 내역
+- `61bf00d` - Fix: MD/top_30_rising_stocks.php 페이지 작동 문제 해결 및 DB 연동
 - `f7ddf6c` - 전체 프로젝트 업데이트 및 정리
 - `aeb820d` - README.md 업데이트: 실시간 상승률 30위 종목 기능 추가
 - `0e19290` - 실시간 상승률 30위 종목 페이지 개발 완료
+
+### 🆕 최신 업데이트 (2025-08-03)
+
+### 차트 데이터 수집 시 수정주가 사용 명시
+- ✅ `python_modules/get_stock_chart_data.py` 스크립트에서 키움증권 API로 차트 데이터 요청 시, 수정주가를 사용하도록 명시적으로 코드를 수정하여 가독성 및 유지보수성 향상.
+
+### Git 커밋 내역
+- `8d97b95` - feat: 수정주가 사용을 명시적으로 코드에 반영
+
+### 🆕 최신 업데이트 (2025-08-01)
+
+### MD/top_30_rising_stocks.php 페이지 작동 문제 해결 및 DB 연동
+- ✅ `db_setup.py`에 `top_30_rising_stocks` 테이블 생성 로직 추가
+- ✅ `python_modules/get_top_30_rising_stocks.py` 스크립트가 API 데이터를 성공적으로 가져오면 `top_30_rising_stocks` 테이블에 저장하도록 변경
+- ✅ `MD/top_30_rising_stocks.php` 페이지가 실시간 스크립트 실행 대신 `top_30_rising_stocks` 테이블에서 데이터를 읽어오도록 로직 변경
+- ✅ 장중이 아닐 때도 마지막으로 성공한 데이터를 표시하여 페이지가 비어 보이는 문제 해결
+
+### display_us_stocks.php 연관 국내 종목 표시 문제 해결
+- ✅ `display_us_stocks.php`에서 연관 국내 종목 검색 시 `stock_news` 테이블의 테마와 부분적으로 일치하도록 `LIKE` 연산자 사용
 
 ### 접근 방법
 1. 메인 대시보드에서 "실시간 상승률 30위 종목" 클릭
