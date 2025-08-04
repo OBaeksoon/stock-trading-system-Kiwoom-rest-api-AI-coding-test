@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전체 종목 조회 (테마 및 뉴스 포함)</title>
+    <title>코스피/코스닥 전체 종목 현재가</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +22,13 @@
         h1 {
             color: #0056b3;
             text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
             margin-bottom: 20px;
+            font-size: 16px;
         }
         #searchInput {
             width: 100%;
@@ -30,19 +38,48 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+        .floating-home {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-decoration: none;
+            color: white;
+            font-size: 24px;
+        }
+        .floating-home:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        .search-results {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
         th, td {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
             text-align: left;
             white-space: nowrap;
         }
         td.news-title {
-            white-space: normal; /* 뉴스 제목은 여러 줄로 표시될 수 있도록 설정 */
+            white-space: normal;
+            max-width: 200px;
         }
         th {
             background-color: #007bff;
@@ -56,6 +93,21 @@
         tr:hover {
             background-color: #ddd;
         }
+        .positive {
+            color: red;
+            font-weight: bold;
+        }
+        .negative {
+            color: blue;
+            font-weight: bold;
+        }
+        .news-link {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .news-link:hover {
+            text-decoration: underline;
+        }
         .error {
             color: red;
             text-align: center;
@@ -66,28 +118,56 @@
             font-weight: bold;
             color: #555;
         }
-        .news-link {
-            color: #0056b3;
-            text-decoration: none;
-        }
-        .news-link:hover {
-            text-decoration: underline;
-        }
-        .positive {
-            color: red;
-        }
-        .negative {
-            color: blue;
-        }
     </style>
+    <script>
+        function searchTable() {
+            var input, filter, table, tr, i, visibleCount = 0;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("stockTable");
+            if (!table) return;
+
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                let tds = tr[i].getElementsByTagName("td");
+                let found = false;
+                
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        let txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (found) {
+                    tr[i].style.display = "";
+                    visibleCount++;
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+            
+            var resultsDiv = document.getElementById("searchResults");
+            if (filter === "") {
+                resultsDiv.innerHTML = "";
+            } else {
+                resultsDiv.innerHTML = `검색 결과: ${visibleCount}개 종목`;
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>전체 종목 조회 (테마 및 뉴스 포함)</h1>
-        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="종목, 테마, 또는 뉴스 내용 검색...">
+        <h1>코스피/코스닥 전체 종목 현재가</h1>
+        <p class="subtitle" id="subtitle">데이터 로딩 중...</p>
+        <input type="text" id="searchInput" placeholder="실시간 검색: 종목 코드, 종목명, 뉴스 내용 입력...">
+        <div id="searchResults" class="search-results"></div>
 
         <?php
-        // DB 연결 설정 로드
         $config_file = __DIR__ . '/config.ini';
 
         if (!file_exists($config_file)) {
@@ -97,7 +177,7 @@
         $config = parse_ini_file($config_file, true);
 
         if ($config === false || !isset($config['DB'])) {
-            die("<p class=\"error\">오류: config.ini 파일에 [DB] 섹션 또는 필요한 키가 누락되었습니다.</p>");
+            die("<p class=\"error\">오류: config.ini 파일에 [DB] 섹션이 누락되었습니다.</p>");
         }
 
         $db_host = $config['DB']['HOST'];
@@ -106,49 +186,87 @@
         $db_name = $config['DB']['DATABASE'];
         $db_port = $config['DB']['PORT'];
 
-        // MySQL 데이터베이스 연결
         $conn = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
 
         if ($conn->connect_error) {
             die("<p class=\"error\">데이터베이스 연결 실패: " . $conn->connect_error . "</p>");
         }
         
-        // UTF-8 인코딩 설정
         $conn->set_charset("utf8mb4");
 
-        // SQL 쿼리 수정: all_stocks, stock_details, stock_news 테이블을 조인합니다.
+        // 페이징 설정
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 100; // 페이지당 표시할 항목 수
+        $offset = ($page - 1) * $limit;
+
+        // 전체 항목 수 계산
+        $count_sql = "SELECT COUNT(*) as total FROM stock_details WHERE circulating_shares IS NOT NULL AND circulating_shares != '' AND circulating_shares != '0'";
+        $count_result = $conn->query($count_sql);
+        $total_rows = $count_result ? $count_result->fetch_assoc()['total'] : 0;
+        $total_pages = ceil($total_rows / $limit);
+
+        // stock_details와 stock_news 테이블 조인하여 데이터 조회 (유통주식수가 있는 종목만)
         $sql = "
-            SELECT
-                a.stock_code,
-                a.stock_name,
-                a.market,
-                d.current_price,
-                d.previous_day_closing_price,
-                (SELECT theme FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS theme,
-                (SELECT title FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS news_title,
-                (SELECT link FROM stock_news WHERE stock_code = a.stock_code ORDER BY pub_date DESC LIMIT 1) AS news_link
-            FROM
-                all_stocks a
-            LEFT JOIN
-                stock_details d ON a.stock_code = d.stock_code
-            ORDER BY
-                a.stock_name ASC;
+            SELECT 
+                sd.stock_code,
+                sd.stock_name,
+                sd.market,
+                sd.current_price,
+                sd.previous_day_closing_price,
+                sd.circulating_shares,
+                sn.title AS news_title,
+                sn.link AS news_link
+            FROM stock_details sd
+            LEFT JOIN (
+                SELECT stock_code, title, link, 
+                       ROW_NUMBER() OVER(PARTITION BY stock_code ORDER BY pub_date DESC) as rn
+                FROM stock_news
+            ) sn ON sd.stock_code = sn.stock_code AND sn.rn = 1
+            WHERE sd.circulating_shares IS NOT NULL 
+                AND sd.circulating_shares != '' 
+                AND sd.circulating_shares != '0'
+            ORDER BY sd.stock_name ASC
+            LIMIT $limit OFFSET $offset
         ";
         
         $result = $conn->query($sql);
 
         if ($result && $result->num_rows > 0) {
+            // 상승/하락 종목 수는 전체 기준으로 계산해야 하므로 별도 쿼리 실행
+            $stats_sql = "
+                SELECT 
+                    SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) > CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as rising_count,
+                    SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) < CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as falling_count
+                FROM stock_details
+                WHERE circulating_shares IS NOT NULL 
+                AND circulating_shares != '' 
+                AND circulating_shares != '0'
+                AND previous_day_closing_price IS NOT NULL
+                AND current_price IS NOT NULL
+            ";
+            $stats_result = $conn->query($stats_sql);
+            $stats = $stats_result ? $stats_result->fetch_assoc() : ['rising_count' => 0, 'falling_count' => 0];
+            $rising_count = $stats['rising_count'];
+            $falling_count = $stats['falling_count'];
+            
+            echo "<script>";
+            echo "document.getElementById('subtitle').innerHTML = '상승종목: <span style=\"color: red; font-weight: bold;\">{$rising_count}개</span> / 하락종목: <span style=\"color: blue; font-weight: bold;\">{$falling_count}개</span> (총 {$total_rows}개 종목)';";
+            echo "</script>";
+            
             echo "<table id='stockTable'>";
-            echo "<thead><tr><th>종목코드</th><th>종목명</th><th>시장</th><th>현재가</th><th>등락률</th><th>테마</th><th>최신 뉴스</th></tr></thead>";
+            echo "<thead><tr><th>종목코드</th><th>종목명</th><th>시장</th><th>현재가</th><th>등락률</th><th>전일종가</th><th>유통주수</th><th>관련뉴스</th></tr></thead>";
             echo "<tbody>";
+            
             while($row = $result->fetch_assoc()) {
+                // 가격 데이터 처리 (+/- 부호 제거)
+                $current_price = str_replace(['+', '-', ','], '', $row["current_price"]);
+                $prev_price = str_replace(['+', '-', ','], '', $row["previous_day_closing_price"]);
+                
                 // 등락률 계산
                 $fluctuation_rate_str = 'N/A';
                 $rate_class = '';
-                if (is_numeric($row["current_price"]) && is_numeric($row["previous_day_closing_price"]) && $row["previous_day_closing_price"] != 0) {
-                    $current_price = floatval($row["current_price"]);
-                    $prev_close_price = floatval($row["previous_day_closing_price"]);
-                    $fluctuation_rate = (($current_price - $prev_close_price) / $prev_close_price) * 100;
+                if (is_numeric($current_price) && is_numeric($prev_price) && $prev_price != 0) {
+                    $fluctuation_rate = (($current_price - $prev_price) / $prev_price) * 100;
                     $fluctuation_rate_str = number_format($fluctuation_rate, 2) . '%';
                     if ($fluctuation_rate > 0) {
                         $rate_class = 'positive';
@@ -161,14 +279,15 @@
                 echo "<td>" . htmlspecialchars($row["stock_code"]) . "</td>";
                 echo "<td>" . htmlspecialchars($row["stock_name"]) . "</td>";
                 echo "<td>" . htmlspecialchars($row["market"]) . "</td>";
-                echo "<td>" . (is_numeric($row["current_price"]) ? number_format($row["current_price"]) : 'N/A') . "</td>";
+                echo "<td>" . (is_numeric($current_price) ? number_format((float)$current_price) : 'N/A') . "</td>";
                 echo "<td class='" . $rate_class . "'>" . $fluctuation_rate_str . "</td>";
-                echo "<td>" . htmlspecialchars($row["theme"] ?? 'N/A') . "</td>";
+                echo "<td>" . (is_numeric($prev_price) ? number_format((float)$prev_price) : 'N/A') . "</td>";
+                echo "<td>" . (is_numeric($row["circulating_shares"]) && $row["circulating_shares"] != '' ? number_format($row["circulating_shares"]) : 'N/A') . "</td>";
                 
-                // 뉴스 제목을 링크로 만듭니다.
+                // 뉴스 제목을 링크로 표시
                 $news_title = htmlspecialchars($row["news_title"] ?? 'N/A');
                 $news_link = htmlspecialchars($row["news_link"] ?? '#');
-                if ($news_link !== '#') {
+                if ($news_link !== '#' && $news_title !== 'N/A') {
                     echo "<td class='news-title'><a href='" . $news_link . "' target='_blank' class='news-link'>" . $news_title . "</a></td>";
                 } else {
                     echo "<td class='news-title'>" . $news_title . "</td>";
@@ -178,40 +297,56 @@
             }
             echo "</tbody>";
             echo "</table>";
+
+            // 페이지네이션 링크 추가
+            echo "<div class='pagination' style='text-align: center; margin-top: 20px;'>";
+            if ($page > 1) {
+                echo "<a href='?page=" . ($page - 1) . "' style='padding: 8px 12px; border: 1px solid #ddd; margin: 0 2px;'>이전</a>";
+            }
+            for ($i = 1; $i <= $total_pages; $i++) {
+                if ($i == $page) {
+                    echo "<strong style='padding: 8px 12px; border: 1px solid #007bff; background-color: #007bff; color: white; margin: 0 2px;'>" . $i . "</strong>";
+                } else {
+                    // 페이지 번호가 너무 많을 경우 일부만 표시
+                    if ($i <= 3 || $i >= $total_pages - 2 || ($i >= $page - 2 && $i <= $page + 2)) {
+                        echo "<a href='?page=" . $i . "' style='padding: 8px 12px; border: 1px solid #ddd; margin: 0 2px;'>" . $i . "</a>";
+                    } elseif ($i == 4 || $i == $total_pages - 3) {
+                        echo "<span style='padding: 8px 12px;'>...</span>";
+                    }
+                }
+            }
+            if ($page < $total_pages) {
+                echo "<a href='?page=" . ($page + 1) . "' style='padding: 8px 12px; border: 1px solid #ddd; margin: 0 2px;'>다음</a>";
+            }
+            echo "</div>";
+
         } else {
-            echo "<p class='no-data'>데이터를 찾을 수 없습니다. Python 스크립트를 실행하여 데이터를 수집했는지 확인하세요.</p>";
+            echo "<p class='no-data'>데이터를 찾을 수 없거나 해당 페이지에 데이터가 없습니다. Python 스크립트를 실행하여 데이터를 수집했는지 확인하세요.</p>";
         }
 
         $conn->close();
         ?>
     </div>
 
+    <!-- 메인으로 가는 플로팅 버튼 -->
+    <a href="index.php" class="floating-home" title="메인으로 이동">
+        🏠 메인으로 이동
+    </a>
+
     <script>
-        function searchTable() {
-            var input, filter, table, tr, i, txtValue;
-            input = document.getElementById("searchInput");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("stockTable");
-            if (!table) return;
-
-            tr = table.getElementsByTagName("tr");
-
-            for (i = 1; i < tr.length; i++) { // 헤더 행 건너뛰기
-                // 모든 td를 순회하며 검색
-                let display = "none";
-                let tds = tr[i].getElementsByTagName("td");
-                for (let j = 0; j < tds.length; j++) {
-                    if (tds[j]) {
-                        txtValue = tds[j].textContent || tds[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            display = "";
-                            break; // 일치하는 셀을 찾으면 루프 중단
-                        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener('input', searchTable);
+                
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        searchTable();
                     }
-                }
-                tr[i].style.display = display;
+                });
             }
-        }
+        });
     </script>
 </body>
 </html>

@@ -59,37 +59,37 @@ def calculate_moving_averages(data):
     
     return df.to_dict('records')
 
-def get_chart_data_from_db(stock_code, chart_type):
+def get_chart_data(stock_code, chart_type):
     """
-    DB에서 차트 데이터를 조회하고 이동평균선을 계산하여 반환합니다.
+    API에서 직접 차트 데이터를 조회하고 이동평균선을 계산하여 반환합니다.
     """
-    conn = get_db_connection()
-    if conn is None:
-        return json.dumps({"error": "데이터베이스 연결 실패"})
-
-    cursor = conn.cursor(dictionary=True)
     try:
-        query = "SELECT chart_data FROM stock_chart_data WHERE stock_code = %s AND chart_type = %s"
-        cursor.execute(query, (stock_code, chart_type))
-        result = cursor.fetchone()
+        from kiwoom_api import get_access_token
+    except ImportError:
+        return json.dumps({"error": "kiwoom_api 모듈을 찾을 수 없습니다."})
+
+    token = get_access_token()
+    if not token:
+        return json.dumps({"error": "API 접근 토큰을 발급받을 수 없습니다."})
+
+    try:
+        # API를 통해 최신 데이터 가져오기
+        chart_data = fetch_chart_data_from_api(token, stock_code, chart_type)
         
-        if result and result['chart_data']:
-            chart_data = json.loads(result['chart_data'])
-            
+        if chart_data:
+            # 일봉/주봉의 경우 이동평균선 계산
             if chart_type in ['daily', 'weekly']:
                 chart_data_with_ma = calculate_moving_averages(chart_data)
                 return json.dumps(chart_data_with_ma)
             else:
+                # 분봉은 그대로 반환
                 return json.dumps(chart_data)
         else:
-            return json.dumps({"error": f"데이터를 찾을 수 없습니다: {stock_code}, {chart_type}"})
+            return json.dumps({"error": f"API로부터 데이터를 가져오지 못했습니다: {stock_code}, {chart_type}"})
             
     except Exception as e:
         logger.error(f"데이터 처리 중 오류 발생: {e}")
         return json.dumps({"error": f"데이터 처리 오류: {e}"})
-    finally:
-        cursor.close()
-        conn.close()
 
 def collect_all_chart_data():
     """전체 종목의 차트 데이터를 수집합니다."""
@@ -263,7 +263,7 @@ if __name__ == "__main__":
             print(json.dumps({"error": "차트 종류는 'daily', 'weekly', 'minute' 중 하나여야 합니다."}))
             sys.exit(1)
         
-        chart_data_json = get_chart_data_from_db(stock_code_arg, chart_type_arg)
+        chart_data_json = get_chart_data(stock_code_arg, chart_type_arg)
         print(chart_data_json)
     else:
         # 전체 종목 차트 데이터 수집
