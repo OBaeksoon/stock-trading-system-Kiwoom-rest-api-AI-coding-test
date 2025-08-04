@@ -227,3 +227,46 @@ python3 python_modules/theme_classifier.py
 
 ## 📝 라이선스
 이 프로젝트는 개인 사용 목적으로 제작되었습니다.
+
+---
+
+## 🤖 Kiwoom MCP 서버 (고급 기능)
+
+`kiwoom_mcp/` 디렉토리는 키움증권 API와 직접 상호작용할 수 있는 독립적인 **MCP(Model-Context-Protocol) 서버**입니다. 기존의 Python 스크립트와는 별개로, 터미널에서 직접 실행하여 보다 정교한 API 제어 및 테스트가 가능합니다.
+
+### 주요 특징
+- **모듈식 설계**: 기능(인증, 주문 등)이 명확하게 분리되어 유지보수 및 확장이 용이합니다.
+- **독립 실행**: `python kiwoom_mcp/main.py` 명령어로 서버를 실행하여 API와 직접 통신합니다.
+- **자동 설정**: 프로젝트 루트의 `config.ini` 파일에서 API 키와 모의투자 설정을 자동으로 읽어옵니다.
+
+### 설치
+`kiwoom_mcp` 서버는 `mcp`와 `requests` 라이브러리가 필요합니다. 아래 명령어로 설치할 수 있습니다.
+```bash
+pip install mcp requests
+```
+또는 `kiwoom_mcp` 디렉토리로 이동하여 아래 명령어를 실행하면 프로젝트 의존성을 설치할 수 있습니다.
+```bash
+cd kiwoom_mcp
+pip install -e .
+```
+
+### 실행 방법
+프로젝트 루트 디렉토리에서 다음 명령어를 실행하여 서버를 시작합니다.
+```bash
+python3 kiwoom_mcp/main.py
+```
+서버가 실행되면 API와 상호작용할 준비가 된 것입니다.
+
+### 제공되는 도구 (Tools)
+MCP 서버는 다음과 같은 도구를 제공하여 API 기능을 직접 호출할 수 있습니다.
+
+- **인증 관련**
+  - `set_credentials`: API 앱키와 시크릿키를 수동으로 설정합니다.
+  - `get_access_token`: 설정된 정보를 바탕으로 API 접근 토큰을 발급받습니다.
+  - `set_access_token`: 이미 발급받은 토큰을 직접 설정합니다.
+  - `check_token_status`: 현재 토큰의 유효성과 만료 시간을 확인합니다.
+
+- **주문 관련**
+  - `stock_buy_order`: 주식 매수 주문을 실행합니다.
+  - `stock_sell_order`: 주식 매도 주문을 실행합니다.
+  - `get_trade_types`: 사용 가능한 주문 매매구분 목록을 조회합니다.
