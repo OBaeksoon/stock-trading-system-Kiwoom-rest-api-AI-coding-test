@@ -15,10 +15,10 @@
 - **index.php** - 메인 대시보드 페이지
 
 #### 종목 관련
-- **display_all_stocks.php** - 전체 종목 목록 조회
+- **display_all_stocks.php** - 전체 종목 목록 조회 (페이징 처리로 성능 개선)
 - **display_stock_details.php** - 종목 상세 정보 표시
 - **display_stock_chart.php** - 종목 차트 표시
-- **display_technical_analysis.php** - 기술적 지표 분석 결과
+- **display_technical_analysis.php** - 기술적 지표 분석 결과 (실시간 분석 및 오류 진단 강화)
 - **search_stocks.php** - 종목 검색 기능
 - **search_stock_by_name.php** - 종목명으로 검색
 - **get_stock_details.php** - 종목 상세 정보 API
@@ -33,8 +33,8 @@
 
 #### 차트 관련
 - **chart.html** - 차트 표시용 HTML
-- **view_stock_chart.php** - 차트 뷰어
-- **fetch_chart_data.php** - 차트 데이터 API
+- **view_stock_chart.php** - 실시간 HTS 스타일 차트 뷰어
+- **fetch_chart_data.php** - 차트 데이터 API (실시간 데이터 중계)
 
 ### 🐍 Python 모듈 (python_modules/)
 
@@ -44,7 +44,7 @@
 #### 데이터 수집
 - **get_all_stocks_to_db.py** - 전체 종목 정보 DB 저장
 - **get_stock_details_to_db.py** - 종목 상세 정보 수집
-- **get_stock_chart_data.py** - 차트 데이터 수집
+- **get_stock_chart_data.py** - 실시간 차트 데이터 조회 (API 직접 호출)
 - **get_stock_code_by_name.py** - 종목명으로 코드 조회
 - **get_technical_analysis.py** - 기술적 지표 분석
 
