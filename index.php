@@ -220,6 +220,10 @@ $conn->close();
                 <h2>실시간 차트 조회</h2>
                 <p>종목의 주봉, 일봉, 분봉 차트를 시각화하여 보여줍니다.</p>
             </a>
+            <a href="display_us_stocks.php" class="menu-card">
+                <h2>미국 상승률 상위 주식</h2>
+                <p>Yahoo Finance에서 집계한 미국 주식 상승률 상위 종목을 확인합니다.</p>
+            </a>
         </div>
     </div>
 </body>

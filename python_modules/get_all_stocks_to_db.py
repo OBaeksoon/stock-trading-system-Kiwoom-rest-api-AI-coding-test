@@ -295,21 +295,42 @@ def get_and_save_details(token, all_stocks):
         logger.warning("수집된 종목 상세 정보가 없습니다.")
 
 if __name__ == "__main__":
-    logger.info("코스피/코스닥 전종목 및 상세 정보 DB 저장 스크립트를 시작합니다.")
-    
-    token = get_access_token()
-    if token:
-        kospi_stocks = get_all_stocks(token, '0', 'KOSPI')
-        time.sleep(1)
-        kosdaq_stocks = get_all_stocks(token, '10', 'KOSDAQ')
-        all_combined_stocks = kospi_stocks + kosdaq_stocks
+    # 잠금 파일 경로 설정
+    LOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'get_all_stocks.lock')
 
-        if all_combined_stocks:
-            save_stocks_to_db(all_combined_stocks)
-            get_and_save_details(token, all_combined_stocks)
+    # 잠금 파일이 이미 존재하면 스크립트가 실행 중인 것으로 간주하고 종료
+    if os.path.exists(LOCK_FILE):
+        logger.info(f"잠금 파일({LOCK_FILE})이 존재하여 스크립트를 시작하지 않습니다. 이미 다른 프로세스가 실행 중일 수 있습니다.")
+        exit()
+
+    try:
+        # 잠금 파일 생성
+        with open(LOCK_FILE, 'w') as f:
+            f.write(str(os.getpid()))
+        
+        logger.info("코스피/코스닥 전종목 및 상세 정보 DB 저장 스크립트를 시작합니다.")
+        
+        token = get_access_token()
+        if token:
+            kospi_stocks = get_all_stocks(token, '0', 'KOSPI')
+            time.sleep(1)
+            kosdaq_stocks = get_all_stocks(token, '10', 'KOSDAQ')
+            all_combined_stocks = kospi_stocks + kosdaq_stocks
+
+            if all_combined_stocks:
+                save_stocks_to_db(all_combined_stocks)
+                get_and_save_details(token, all_combined_stocks)
+            else:
+                logger.warning("수집된 종목 정보가 없어 상세 정보 조회를 진행할 수 없습니다.")
         else:
-            logger.warning("수집된 종목 정보가 없어 상세 정보 조회를 진행할 수 없습니다.")
-    else:
-        logger.error("접근 토큰을 얻지 못하여 전종목 조회를 시작할 수 없습니다.")
-    
-    logger.info("스크립트를 성공적으로 종료합니다.")
+            logger.error("접근 토큰을 얻지 못하여 전종목 조회를 시작할 수 없습니다.")
+        
+        logger.info("스크립트 실행이 완료되었습니다.")
+
+    except Exception as e:
+        logger.error(f"스크립트 실행 중 오류 발생: {e}", exc_info=True)
+    finally:
+        # 스크립트 종료 시 잠금 파일 삭제
+        if os.path.exists(LOCK_FILE):
+            os.remove(LOCK_FILE)
+        logger.info("스크립트를 종료합니다.")
