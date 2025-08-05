@@ -23,7 +23,7 @@ MD폴더 안에 있는 파일들은 참고용으로 사용하여 본 프로젝�
 
 웹 인터페이스: PHP, HTML, CSS, JavaScript
 
-API 연동: 키움증권 REST API
+API 연동: Python 스크립트에서 `kiwoom_mcp` 모듈을 직접 호출하여 키움증권 REST API와 통신합니다. `kiwoom_mcp`는 별도의 서버로 실행하는 대신, 프로젝트의 일부 모듈로 사용됩니다.
 
 데이터베이스: MySQL (필요한 데이터 저장)
 데이터베이스에는 기본적으로 APP_KEY, APP_SECRET 가 저장되여 있다.
