@@ -2,10 +2,10 @@ import json
 import configparser
 import os
 import mysql.connector
-import requests
 import logging
 import datetime
 import sys
+from pyheroapi.client import KiwoomClient  # pyheroapi 임포트
 
 # --- 기본 경로 설정 ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +22,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(LOG_FILE, encoding='utf-8')
-        # StreamHandler 제거 - 표준 출력에 로그가 나오지 않도록
     ]
 )
 logger = logging.getLogger(__name__)
@@ -85,100 +84,40 @@ def get_api_settings_from_db():
             cursor.close()
             conn.close()
 
-def get_access_token():
-    """DB에서 API 키를 읽어와 접근 토큰을 발급받습니다."""
-    logger.info("접근 토큰 발급을 시작합니다.")
+def fetch_top_30_with_pyheroapi():
+    """pyheroapi를 사용하여 실시간 상승률 상위 30위 종목을 조회합니다."""
+    logger.info("pyheroapi로 상승률 상위 종목 조회를 시작합니다.")
     app_key, app_secret = get_api_settings_from_db()
     if not app_key or not app_secret:
-        logger.error("API 키를 DB에서 가져오지 못해 토큰 발급을 중단합니다.")
-        return None
+        logger.error("API 키를 DB에서 가져오지 못해 조회를 중단합니다.")
+        return [{"error": "API 키를 찾을 수 없습니다."}]
 
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
     try:
-        base_url = config.get('API', 'BASE_URL')
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.error("config.ini 파일에서 BASE_URL을 찾을 수 없습니다.")
-        return None
+        # KiwoomClient 인스턴스 생성 (토큰 자동 발급)
+        client = KiwoomClient.create_with_credentials(
+            appkey=app_key,
+            secretkey=app_secret,
+            is_production=True  # 실서버 환경
+        )
+        logger.info("pyheroapi 클라이언트 생성 및 인증 성공.")
 
-    url = f"{base_url}/oauth2/token"
-    headers = {"content-type": "application/json"}
-    data = {
-        "grant_type": "client_credentials",
-        "appkey": app_key,
-        "secretkey": app_secret
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, data=json.dumps(data))
-        response.raise_for_status()
-        res_json = response.json()
-
-        access_token = res_json.get("token")
-        if access_token:
-            logger.info("접근 토큰 발급 성공!")
-            return access_token
-        else:
-            logger.error(f"토큰 발급 실패: 응답에 'token'이 없습니다. 응답: {res_json}")
-            return None
-    except requests.exceptions.RequestException as e:
-        logger.error(f"토큰 발급 API 요청 중 오류 발생: {e}")
-        return None
-
-def get_top_30_rising_stocks(token):
-    """키움증권 API(ka10027)를 사용하여 실시간 상승률 상위 30위 종목을 조회합니다."""
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
-    try:
-        base_url = config.get('API', 'BASE_URL')
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.error("config.ini 파일에서 BASE_URL을 찾을 수 없습니다.")
-        return [{"error": "config.ini 파일에서 BASE_URL을 찾을 수 없습니다."}]
-
-    url = f"{base_url}/api/dostk/rkinfo"  # 순위정보 API 엔드포인트
-    headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-        'authorization': f'Bearer {token}',
-        'api-id': 'ka10027'  # 전일대비등락률상위요청 TR ID
-    }
-    
-    data = {
-        "mrkt_tp": "000",       # 000: 전체, 001: 코스피, 101: 코스닥
-        "prc_tp": "0",          # 0: 전체 가격
-        "pric_cnd": "0",        # 0: 전체조회
-        "trde_prica_cnd": "0",  # 0: 전체조회
-        "updown_tp": "2",       # 1: 상한, 2: 상승, 4: 하한, 5: 하락
-        "sort_tp": "1",         # 1: 등락률순, 2: 등락액순
-        "updown_incls": "0",    # 필수 파라미터 (0: 보합 미포함)
-        "stk_cnd": "0",         # 0: 전체조회
-        "trde_qty_cnd": "00000", # 00000: 전체조회
-        "crd_cnd": "0",         # 0: 전체조회
-        "trde_gold_tp": "0",    # 0: 전체조회
-        "stex_tp": "3"          # 1: KRX, 2: NXT, 3: 통합
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        response.raise_for_status()
-        result = response.json()
+        # 상승률 상위 종목 조회
+        stocks_data = client.get_change_rate_ranking(
+            market_type="000",  # 000: 전체
+            sort_type="1",      # 1: 상승률
+            stock_condition="1", # 1: 관리종목제외
+            volume_type="0000", # 거래량 조건 (0000: 전체)
+            updown_incls="0",    # 보합 미포함
+            pric_cnd="0",        # 가격 조건 (0: 전체)
+            trde_prica_cnd="0"  # 거래대금 조건 (0: 전체)
+        )
         
-        logger.info(f"API 응답 코드: {response.status_code}")
-        
-        if result.get('return_code') == 0 and 'pred_pre_flu_rt_upper' in result:
-            stocks_data = result['pred_pre_flu_rt_upper']
-            logger.info(f"API에서 {len(stocks_data)}개 상승률 상위 종목 데이터를 가져왔습니다.")
-            return stocks_data[:30]
-        else:
-            error_msg = result.get('return_msg', 'Unknown error')
-            logger.error(f"API 오류: {error_msg}, 응답: {result}")
-            return [{"error": error_msg, "return_msg": result.get('return_msg', '')}]
-            
-    except requests.exceptions.RequestException as e:
-        logger.error(f"API 호출 중 오류 발생: {e}")
-        return [{"error": f"API 호출 오류: {str(e)}"}]
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON 파싱 오류: {e}")
-        return [{"error": f"JSON 파싱 오류: {str(e)}"}]
+        logger.info(f"pyheroapi에서 {len(stocks_data)}개 종목 데이터를 가져왔습니다.")
+        return stocks_data[:30]
+
+    except Exception as e:
+        logger.error(f"pyheroapi 사용 중 오류 발생: {e}", exc_info=True)
+        return [{"error": f"pyheroapi 오류: {str(e)}"}]
 
 def save_stocks_to_db(stocks):
     """조회된 종목 데이터를 데이터베이스에 저장합니다."""
@@ -239,12 +178,7 @@ def main():
     try:
         logger.info("상승률 상위 30위 종목 조회를 시작합니다.")
         
-        access_token = get_access_token()
-        if not access_token:
-            logger.error("접근 토큰을 가져오지 못했습니다.")
-            sys.exit(1)
-        
-        stocks = get_top_30_rising_stocks(access_token)
+        stocks = fetch_top_30_with_pyheroapi()
         
         if stocks and not (len(stocks) == 1 and 'error' in stocks[0]):
             save_stocks_to_db(stocks)
