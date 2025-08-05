@@ -60,6 +60,9 @@
 #### 데이터베이스 관리
 - **add_theme_column.py** - 테마 컬럼 추가 스크립트
 
+### 🤖 AI Hedge Fund (ai_hedge_fund/)
+AI 기반 주식 분석 및 자동매매 시스템 모듈
+
 ### 🏗️ 키움 MCP 모듈 (kiwoom_mcp/)
 키움증권 API를 위한 MCP(Model Context Protocol) 구현
 
@@ -111,10 +114,9 @@
 - AI 기반 테마 분류
 - 키움증권 API 테마 정보 연동
 
-### 4. 데이터 시각화
-- 인터랙티브 차트 (Chart.js)
-- 반응형 웹 인터페이스
-- 실시간 데이터 업데이트
+### 5. AI Hedge Fund 분석 (NEW!)
+- AI 기반 주식 분석 및 자동매매 시스템 연동
+- `ai_hedge_fund/` 디렉토리에 위치한 모듈을 통해 고급 분석 기능 제공
 
 ## 🔧 설치 및 실행
 
@@ -208,6 +210,15 @@ python3 python_modules/theme_classifier.py
 
 ### Git 커밋 내역
 - `8d97b95` - feat: 수정주가 사용을 명시적으로 코드에 반영
+
+### 🆕 최신 업데이트 (2025-08-05)
+
+### AI Hedge Fund 분석 메뉴 추가 및 관련 파일 포함
+- ✅ `index.php`에 AI Hedge Fund 분석 메뉴 추가
+- ✅ `ai_hedge_fund/` 디렉토리 포함 및 관련 파일 정리
+
+### Git 커밋 내역
+- `b969ecf` - feat: AI Hedge Fund 분석 메뉴 추가 및 관련 파일 포함
 
 ### 🆕 최신 업데이트 (2025-08-01)
 
