@@ -224,6 +224,10 @@ $conn->close();
                 <h2>미국 상승률 상위 주식</h2>
                 <p>Yahoo Finance에서 집계한 미국 주식 상승률 상위 종목을 확인합니다.</p>
             </a>
+            <a href="ai_hedge_fund/ai_dashboard.php" class="menu-card">
+                <h2>AI Hedge Fund 분석</h2>
+                <p>AI를 이용한 주식 종목을 분석합니다.</p>
+            </a>
         </div>
     </div>
 </body>
