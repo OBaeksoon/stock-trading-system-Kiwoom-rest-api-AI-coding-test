@@ -1,119 +1,42 @@
-import requests
-import json
 import configparser
 import os
 import datetime
 import logging
 import mysql.connector
 import time
-from kiwoom_api import get_access_token, get_db_connection, logger, CONFIG_FILE, PROJECT_ROOT
+from kiwoom_api import KiwoomAPI, logger
 
-# --- 키움증권 API 함수 (전종목 조회) ---
-def fn_ka10099(token, mrkt_tp, cont_yn='N', next_key=''):
-    """
-    모의투자 환경에서 코스피 및 코스닥의 모든 종목 정보를 조회합니다. (TR: ka10099)
-    """
+# --- 기본 경로 및 설정 ---
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
+CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
+
+def get_db_connection():
+    """config.ini에서 DB 정보를 읽어와 연결을 생성합니다."""
     config = configparser.ConfigParser()
+    if not os.path.exists(CONFIG_FILE):
+        logger.error(f"설정 파일을 찾을 수 없습니다: {CONFIG_FILE}")
+        return None
+    
     config.read(CONFIG_FILE)
+    
     try:
-        base_url = config.get('API', 'BASE_URL')
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.error(f"config.ini 파일에서 BASE_URL을 찾을 수 없습니다.")
+        db_config = {
+            'host': config.get('DB', 'HOST'),
+            'user': config.get('DB', 'USER'),
+            'password': config.get('DB', 'PASSWORD'),
+            'database': config.get('DB', 'DATABASE'),
+            'port': config.getint('DB', 'PORT')
+        }
+        return mysql.connector.connect(**db_config)
+    except (configparser.NoSectionError, configparser.NoOptionError) as e:
+        logger.error(f"config.ini 파일에 [DB] 섹션 또는 필요한 키가 없습니다. ({e})")
+        return None
+    except mysql.connector.Error as err:
+        logger.error(f"데이터베이스 연결 오류: {err}")
         return None
 
-    url = f"{base_url}/api/dostk/stkinfo"
-    headers = {
-        'Content-Type': 'application/json;charset=UTF-8',
-        'authorization': f'Bearer {token}',
-        'cont-yn': cont_yn,
-        'next-key': next_key,
-        'api-id': 'ka10099',
-    }
-    data = {
-        'mrkt_tp': mrkt_tp,
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"전종목 조회 API 요청 중 오류 발생: {e}")
-        return None
-    except json.JSONDecodeError:
-        logger.error(f"전종목 조회 응답 JSON 파싱 오류. 응답: {response.text}")
-        return None
-
-# --- 키움증권 API 함수 (주식기본정보요청) ---
-def fn_ka10001(token, stk_cd):
-    """
-    단일 종목의 기본 정보를 조회합니다. (TR: ka10001)
-    """
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
-    try:
-        base_url = config.get('API', 'BASE_URL')
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.error(f"config.ini 파일에서 BASE_URL을 찾을 수 없습니다.")
-        return None
-
-    url = f"{base_url}/api/dostk/stkinfo"
-    headers = {
-        'Content-Type': 'application/json;charset=UTF-8',
-        'authorization': f'Bearer {token}',
-        'api-id': 'ka10001',
-    }
-    data = {
-        'stk_cd': stk_cd,
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"주식기본정보요청 API 요청 중 오류 발생 (종목코드: {stk_cd}): {e}")
-        return None
-    except json.JSONDecodeError:
-        logger.error(f"주식기본정보요청 응답 JSON 파싱 오류 (종목코드: {stk_cd}). 응답: {response.text}")
-        return None
-
-# --- 키움증권 API 함수 (일별거래상세요청) ---
-def fn_ka10015(token, stk_cd, strt_dt):
-    """
-    단일 종목의 일별 거래 상세 정보를 조회합니다. (TR: ka10015)
-    """
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
-    try:
-        base_url = config.get('API', 'BASE_URL')
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.error(f"config.ini 파일에서 BASE_URL을 찾을 수 없습니다.")
-        return None
-
-    url = f"{base_url}/api/dostk/stkinfo"
-    headers = {
-        'Content-Type': 'application/json;charset=UTF-8',
-        'authorization': f'Bearer {token}',
-        'api-id': 'ka10015',
-    }
-    data = {
-        'stk_cd': stk_cd,
-        'strt_dt': strt_dt,
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"일별거래상세요청 API 요청 중 오류 발생 (종목코드: {stk_cd}, 일자: {strt_dt}): {e}")
-        return None
-    except json.JSONDecodeError:
-        logger.error(f"일별거래상세요청 응답 JSON 파싱 오류 (종목코드: {stk_cd}, 일자: {strt_dt}). 응답: {response.text}")
-        return None
-
-def get_all_stocks(token, market_type_code, market_name):
+def get_all_stocks(api, market_type_code, market_name):
     """
     지정된 시장의 모든 종목 코드를 조회하고 리스트로 반환합니다.
     """
@@ -123,7 +46,7 @@ def get_all_stocks(token, market_type_code, market_name):
     logger.info(f"{market_name} 종목 정보 조회를 시작합니다.")
 
     while True:
-        response_data = fn_ka10099(token, market_type_code, cont_yn, next_key)
+        response_data = api.get_all_stock_codes(market_type_code, cont_yn, next_key)
         logger.debug(f"API Response for {market_name}: {response_data}")
         time.sleep(1) # API 호출 간 1초 대기
         if response_data is None:
@@ -141,7 +64,7 @@ def get_all_stocks(token, market_type_code, market_name):
             stock_code = s.get('code') or s.get('stk_cd')
             stock_name = s.get('name') or s.get('stk_nm')
             
-            if stock_code and stock_name:  # 둘 다 존재할 때만 추가
+            if stock_code and stock_name:
                 all_stocks.append({
                     'stock_code': stock_code,
                     'stock_name': stock_name,
@@ -234,7 +157,7 @@ def save_stock_details_to_db(stocks_details):
         data_to_insert = [
             (s['stock_code'], s.get('current_price'), s.get('previous_day_closing_price'), s.get('circulating_shares'))
             for s in stocks_details
-            if s.get('stock_code')  # stock_code가 있을 때만 추가
+            if s.get('stock_code')
         ]
         
         if data_to_insert:
@@ -248,14 +171,14 @@ def save_stock_details_to_db(stocks_details):
         cursor.close()
         conn.close()
 
-def get_and_save_details(token, all_stocks):
+def get_and_save_details(api, all_stocks):
     """
     각 종목의 상세 정보를 조회하고 DB에 저장합니다.
     """
     detailed_stocks = []
     today = datetime.date.today()
-    offset = 1 if today.weekday() < 5 else (today.weekday() - 4) # Fri, Sat, Sun -> prev is Thu
-    if today.weekday() == 0: offset = 3 # Monday -> prev is Friday
+    offset = 1 if today.weekday() < 5 else (today.weekday() - 4)
+    if today.weekday() == 0: offset = 3
     
     previous_trading_day_str = (today - datetime.timedelta(days=offset)).strftime('%Y%m%d')
     
@@ -267,17 +190,15 @@ def get_and_save_details(token, all_stocks):
         circulating_shares = None
         previous_day_closing_price = None
 
-        # 1. 주식기본정보요청 (ka10001)
-        ka10001_data = fn_ka10001(token, stock_code)
-        if ka10001_data and ka10001_data.get('return_code') == 0:
+        ka10001_data = api.get_stock_basic_info(stock_code)
+        if ka10001_data:
             output = ka10001_data.get('output', [{}])[0]
             current_price = output.get('cur_prc')
             circulating_shares = output.get('dstr_stk')
         time.sleep(1)
 
-        # 2. 일별거래상세요청 (ka10015) - 전일 종가 확인
-        ka10015_data = fn_ka10015(token, stock_code, previous_trading_day_str)
-        if ka10015_data and ka10015_data.get('return_code') == 0:
+        ka10015_data = api.get_stock_daily_history(stock_code, previous_trading_day_str)
+        if ka10015_data:
             daily_detail = ka10015_data.get('daly_trde_dtl', [{}])[0]
             previous_day_closing_price = daily_detail.get('close_pric')
         time.sleep(1)
@@ -295,31 +216,28 @@ def get_and_save_details(token, all_stocks):
         logger.warning("수집된 종목 상세 정보가 없습니다.")
 
 if __name__ == "__main__":
-    # 잠금 파일 경로 설정
     LOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'get_all_stocks.lock')
 
-    # 잠금 파일이 이미 존재하면 스크립트가 실행 중인 것으로 간주하고 종료
     if os.path.exists(LOCK_FILE):
-        logger.info(f"잠금 파일({LOCK_FILE})이 존재하여 스크립트를 시작하지 않습니다. 이미 다른 프로세스가 실행 중일 수 있습니다.")
+        logger.info(f"잠금 파일({LOCK_FILE})이 존재하여 스크립트를 시작하지 않습니다.")
         exit()
 
     try:
-        # 잠금 파일 생성
         with open(LOCK_FILE, 'w') as f:
             f.write(str(os.getpid()))
         
         logger.info("코스피/코스닥 전종목 및 상세 정보 DB 저장 스크립트를 시작합니다.")
         
-        token = get_access_token()
-        if token:
-            kospi_stocks = get_all_stocks(token, '0', 'KOSPI')
+        api = KiwoomAPI()
+        if api.token:
+            kospi_stocks = get_all_stocks(api, '0', 'KOSPI')
             time.sleep(1)
-            kosdaq_stocks = get_all_stocks(token, '10', 'KOSDAQ')
+            kosdaq_stocks = get_all_stocks(api, '10', 'KOSDAQ')
             all_combined_stocks = kospi_stocks + kosdaq_stocks
 
             if all_combined_stocks:
                 save_stocks_to_db(all_combined_stocks)
-                get_and_save_details(token, all_combined_stocks)
+                get_and_save_details(api, all_combined_stocks)
             else:
                 logger.warning("수집된 종목 정보가 없어 상세 정보 조회를 진행할 수 없습니다.")
         else:
@@ -330,7 +248,6 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"스크립트 실행 중 오류 발생: {e}", exc_info=True)
     finally:
-        # 스크립트 종료 시 잠금 파일 삭제
         if os.path.exists(LOCK_FILE):
             os.remove(LOCK_FILE)
         logger.info("스크립트를 종료합니다.")

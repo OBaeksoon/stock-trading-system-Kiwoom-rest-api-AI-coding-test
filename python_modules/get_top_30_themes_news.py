@@ -68,35 +68,29 @@ def get_naver_api_keys():
         return None, None
 
 def get_top_30_stocks():
-    """실시간 상승률 30위 종목을 가져옵니다."""
-    import subprocess
-    import json
-    
-    try:
-        # get_top_30_rising_stocks.py 스크립트 실행
-        script_path = '/home/stock/public_html/python_modules/get_top_30_rising_stocks.py'
-        result = subprocess.run(['python3', script_path], capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            stocks_data = json.loads(result.stdout)
-            if stocks_data and isinstance(stocks_data, list) and 'stk_cd' in stocks_data[0]:
-                stock_list = []
-                for stock in stocks_data:
-                    stock_list.append({
-                        'stock_code': stock['stk_cd'],
-                        'stock_name': stock['stk_nm']
-                    })
-                logger.info(f"실시간 상승률 상위 {len(stock_list)}개 종목을 가져왔습니다.")
-                return stock_list
-            else:
-                logger.error("상승률 데이터에 오류가 있습니다.")
-                return []
-        else:
-            logger.error(f"상승률 스크립트 실행 오류: {result.stderr}")
-            return []
-    except Exception as e:
-        logger.error(f"상승률 데이터 가져오기 오류: {e}")
+    """DB에서 실시간 상승률 30위 종목을 가져옵니다."""
+    conn = get_db_connection()
+    if conn is None:
         return []
+    
+    stock_list = []
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT stock_code, stock_name FROM top_30_rising_stocks ORDER BY rank LIMIT 30")
+        results = cursor.fetchall()
+        for row in results:
+            stock_list.append({
+                'stock_code': row['stock_code'],
+                'stock_name': row['stock_name']
+            })
+        logger.info(f"DB에서 상승률 상위 {len(stock_list)}개 종목을 가져왔습니다.")
+    except mysql.connector.Error as err:
+        logger.error(f"DB에서 상승률 상위 종목 조회 중 오류 발생: {err}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+    return stock_list
 
 def search_naver_news(query, client_id, client_secret, display=3):
     """네이버 뉴스 API를 사용하여 뉴스를 검색합니다."""

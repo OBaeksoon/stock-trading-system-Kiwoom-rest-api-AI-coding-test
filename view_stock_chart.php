@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTS 스타일 주식 차트</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.0/dist/chartjs-chart-financial.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.0/dist/chartjs-chart-financial.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.2.0/dist/chartjs-plugin-crosshair.min.js"></script>
     <style>
         :root {
@@ -200,18 +200,16 @@
         const priceDatasets = [{
             label: '가격',
             data: priceData,
-            upColor: var_('--red-color'),
-            downColor: var_('--blue-color'),
+            upColor: '#d84033',
+            downColor: '#1260cc',
             borderColor: function(ctx) {
-                // 캔들 테두리도 본체와 동일하게
                 const o = ctx.raw.o, c = ctx.raw.c;
-                return c > o ? var_('--red-color') : var_('--blue-color');
+                return c > o ? '#d84033' : '#1260cc';
             },
             borderWidth: 1,
             color: function(ctx) {
-                // 캔들 본체 색상 지정 (Chart.js 3.x에서는 upColor/downColor로 충분하지만, 혹시 적용 안될 경우 대비)
                 const o = ctx.raw.o, c = ctx.raw.c;
-                return c > o ? var_('--red-color') : var_('--blue-color');
+                return c > o ? '#d84033' : '#1260cc';
             }
         }];
 
@@ -264,8 +262,8 @@
                         }
                     },
                     financial: {
-                        upColor: var_('--red-color'),
-                        downColor: var_('--blue-color'),
+                        upColor: '#d84033',
+                        downColor: '#1260cc',
                         borderColor: '#888',
                         borderWidth: 1
                     }
@@ -280,7 +278,7 @@
             return {
                 x: parseDate(d.date),
                 y: d.volume,
-                backgroundColor: isUp ? var_('--red-color') : var_('--blue-color')
+                backgroundColor: isUp ? '#d84033' : '#1260cc'
             };
         });
 

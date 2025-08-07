@@ -10,8 +10,35 @@ from datetime import datetime, timedelta
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(PROJECT_ROOT)
 
-# kiwoom_api 모듈 임포트
-from python_modules.kiwoom_api import get_db_connection
+import mysql.connector
+
+# 프로젝트 루트 경로 설정 (이 파일의 상위 폴더)
+CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
+
+def get_db_connection():
+    """config.ini에서 DB 정보를 읽어와 연결을 생성합니다."""
+    config = configparser.ConfigParser()
+    if not os.path.exists(CONFIG_FILE):
+        print(f"설정 파일을 찾을 수 없습니다: {CONFIG_FILE}", file=sys.stderr)
+        return None
+    
+    config.read(CONFIG_FILE)
+    
+    try:
+        db_config = {
+            'host': config.get('DB', 'HOST'),
+            'user': config.get('DB', 'USER'),
+            'password': config.get('DB', 'PASSWORD'),
+            'database': config.get('DB', 'DATABASE'),
+            'port': config.getint('DB', 'PORT')
+        }
+        return mysql.connector.connect(**db_config)
+    except (configparser.NoSectionError, configparser.NoOptionError) as e:
+        print(f"config.ini 파일에 [DB] 섹션 또는 필요한 키가 없습니다. ({e})", file=sys.stderr)
+        return None
+    except mysql.connector.Error as err:
+        print(f"데이터베이스 연결 오류: {err}", file=sys.stderr)
+        return None
 
 def save_technical_analysis_to_db(stock_code, analysis_data):
     """
