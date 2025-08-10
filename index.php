@@ -200,7 +200,7 @@ $conn->close();
                 <h2>테마별 뉴스</h2>
                 <p>주요 테마별 뉴스 현황을 봅니다.</p>
             </a>
-            <a href="MD/top_30_rising_stocks.php" class="menu-card">
+            <a href="display_top_30_rising_stocks.php" class="menu-card">
                 <h2>실시간 상승률 30위 종목</h2>
                 <p>실시간 상승률 상위 30위 종목을 확인합니다.</p>
             </a>

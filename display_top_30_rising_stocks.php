@@ -239,24 +239,30 @@
     </style>
 </head>
 <body>
-    <a href="../index.php" class="home-btn">🏠 메인으로</a>
+    <a href="index.php" class="home-btn">🏠 메인으로</a>
     <div class="header">
         <h1>📈 실시간 상승률 30위</h1>
     </div>
     <div class="container">
         <?php
         // 데이터베이스 연결
-        $config = parse_ini_file('../config.ini');
-        $conn = new mysqli($config['HOST'], $config['USER'], $config['PASSWORD'], $config['DATABASE'], $config['PORT']);
+        $config = parse_ini_file('config.ini', true); // 섹션을 파싱하도록 true 추가
+        $conn = new mysqli(
+            $config['DB']['HOST'],
+            $config['DB']['USER'],
+            $config['DB']['PASSWORD'],
+            $config['DB']['DATABASE'],
+            $config['DB']['PORT']
+        );
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }
         $conn->set_charset("utf8mb4");
 
-        // 단일 쿼리로 종목과 최신 뉴스 3개 조회 (N+1 문제 해결)
+        // [수정된 부분 1] SQL 쿼리에서 'fluctuation_rate'를 'fluctuation_rate'로 변경
         $sql = "
             SELECT
-                t.rank, t.stock_code, t.stock_name, t.current_price, t.change_rate, t.volume, t.updated_at,
+                t.rank, t.stock_code, t.stock_name, t.current_price, t.fluctuation_rate, t.volume, t.updated_at,
                 n.title, n.link, n.pub_date, n.theme
             FROM
                 top_30_rising_stocks t
@@ -266,13 +272,17 @@
                     ROW_NUMBER() OVER(PARTITION BY stock_code ORDER BY pub_date DESC) as rn
                 FROM
                     stock_news
-            ) n ON t.stock_code = n.stock_code AND n.rn <= 3
+            ) n ON SUBSTRING_INDEX(t.stock_code, '_', 1) = n.stock_code AND n.rn <= 3
             WHERE t.rank > 0
             ORDER BY
                 t.rank ASC, n.pub_date DESC
         ";
 
         $result = $conn->query($sql);
+
+        if (!$result) {
+            echo "<p class='error'>SQL Error: " . $conn->error . "</p>";
+        }
 
         if ($result && $result->num_rows > 0) {
             $stocks = [];
@@ -284,13 +294,13 @@
                         'stock_code' => $row['stock_code'],
                         'stock_name' => $row['stock_name'],
                         'current_price' => $row['current_price'],
-                        'change_rate' => $row['change_rate'],
+                        'fluctuation_rate' => $row['fluctuation_rate'], // [수정된 부분 2] 배열 키를 'fluctuation_rate'로 변경
                         'volume' => $row['volume'],
                         'updated_at' => $row['updated_at'],
                         'news' => []
                     ];
                 }
-                if ($row['title']) { // 뉴스가 있는 경우에만 추가
+                if ($row['title']) {
                     $stocks[$stock_code]['news'][] = [
                         'title' => $row['title'],
                         'link' => $row['link'],
@@ -316,7 +326,8 @@
 
                 echo "<div class='stock-metrics'>";
                 echo "<div class='metric'><div class='metric-label'>현재가</div><div class='metric-value price'>" . number_format(intval($stock['current_price'])) . "원</div></div>";
-                echo "<div class='metric'><div class='metric-label'>등락률</div><div class='metric-value change'>" . ($stock['change_rate'] >= 0 ? '+' : '') . htmlspecialchars($stock['change_rate']) . "%</div></div>";
+                // [수정된 부분 3] 출력 부분에서 'fluctuation_rate'를 'fluctuation_rate'로 변경
+                echo "<div class='metric'><div class='metric-label'>등락률</div><div class='metric-value change'>" . ($stock['fluctuation_rate'] >= 0 ? '+' : '') . htmlspecialchars($stock['fluctuation_rate']) . "%</div></div>";
                 echo "<div class='metric'><div class='metric-label'>거래량</div><div class='metric-value volume'>" . number_format(intval($stock['volume'])) . "</div></div>";
                 echo "</div>";
 

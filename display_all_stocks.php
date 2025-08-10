@@ -33,19 +33,17 @@ try {
 // 1. 전체 종목 통계 계산
 $stats_sql = "
     SELECT 
-        COUNT(*) as total_count,
         SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) > CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as rising_count,
         SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) < CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as falling_count
     FROM stock_details
-    WHERE circulating_shares IS NOT NULL AND circulating_shares != '' AND circulating_shares != '0'
-      AND previous_day_closing_price IS NOT NULL AND current_price IS NOT NULL";
+    WHERE previous_day_closing_price IS NOT NULL AND current_price IS NOT NULL";
 $stats = $pdo->query($stats_sql)->fetch();
 
 // 2. 페이징 설정
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 100;
 $offset = ($page - 1) * $limit;
-$total_rows = $stats['total_count'] ?? 0;
+$total_rows = $pdo->query('SELECT COUNT(*) FROM stock_details')->fetchColumn();
 $total_pages = ceil($total_rows / $limit);
 
 // 3. 메인 데이터 조회 (최신 뉴스는 별도 조회)
@@ -53,7 +51,6 @@ $main_sql = "
     SELECT 
         stock_code, stock_name, market, current_price, previous_day_closing_price, circulating_shares
     FROM stock_details
-    WHERE circulating_shares IS NOT NULL AND circulating_shares != '' AND circulating_shares != '0'
     ORDER BY stock_name ASC
     LIMIT :limit OFFSET :offset
 ";
@@ -81,7 +78,13 @@ if (!empty($stocks)) {
     ";
     $news_stmt = $pdo->prepare($news_sql);
     $news_stmt->execute($stock_codes);
-    $news_data = $news_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $news_data_raw = $news_stmt->fetchAll(PDO::FETCH_GROUP);
+    
+    // PDO::FETCH_GROUP은 각 키에 대해 배열을 반환하므로, 첫 번째 항목만 사용하도록 데이터를 재구성합니다.
+    $news_data = [];
+    foreach ($news_data_raw as $code => $news_items) {
+        $news_data[$code] = $news_items[0];
+    }
 }
 
 ?>
@@ -148,7 +151,7 @@ if (!empty($stocks)) {
                             <td><?= number_format($current_price) ?></td>
                             <td class="<?= $rate_class ?>"><?= $rate_str ?></td>
                             <td><?= number_format($prev_price) ?></td>
-                            <td><?= number_format($row["circulating_shares"]) ?></td>
+                            <td><?= is_numeric($row["circulating_shares"]) ? number_format($row["circulating_shares"]) : 'N/A' ?></td>
                             <td class="news-title">
                                 <?php if (isset($news_data[$row['stock_code']])): ?>
                                     <a href="<?= htmlspecialchars($news_data[$row['stock_code']]['link']) ?>" target="_blank"><?= htmlspecialchars($news_data[$row['stock_code']]['title']) ?></a>

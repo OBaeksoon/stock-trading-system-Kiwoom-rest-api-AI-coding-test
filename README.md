@@ -24,7 +24,7 @@
 - **get_stock_details.php** - 종목 상세 정보 API
 
 #### 실시간 상승률 분석 (NEW!)
-- **MD/top_30_rising_stocks.php** - 실시간 상승률 30위 종목 표시 (DB 연동)
+- **display_top_30_rising_stocks.php** - 실시간 상승률 30위 종목 표시 (DB 연동, 작동 문제 해결)
 - **MD/update_news.php** - 뉴스 데이터 업데이트 API
 
 #### 뉴스 관련

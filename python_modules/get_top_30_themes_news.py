@@ -68,29 +68,46 @@ def get_naver_api_keys():
         return None, None
 
 def get_top_30_stocks():
-    """DB에서 실시간 상승률 30위 종목을 가져옵니다."""
-    conn = get_db_connection()
-    if conn is None:
-        return []
+    """실시간 상승률 30위 종목을 가져옵니다."""
+    import subprocess
+    import json
     
-    stock_list = []
     try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT stock_code, stock_name FROM top_30_rising_stocks ORDER BY rank LIMIT 30")
-        results = cursor.fetchall()
-        for row in results:
-            stock_list.append({
-                'stock_code': row['stock_code'],
-                'stock_name': row['stock_name']
-            })
-        logger.info(f"DB에서 상승률 상위 {len(stock_list)}개 종목을 가져왔습니다.")
-    except mysql.connector.Error as err:
-        logger.error(f"DB에서 상승률 상위 종목 조회 중 오류 발생: {err}")
-    finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-    return stock_list
+        # get_top_30_rising_stocks.py 스크립트 실행 (check=True로 오류 시 예외 발생)
+        script_path = '/home/stock/public_html/python_modules/get_top_30_rising_stocks.py'
+        result = subprocess.run(['python3', script_path], capture_output=True, text=True, check=True)
+        
+        # 스크립트의 표준 출력이 이제 주식 목록의 JSON이 됩니다.
+        stocks_data = json.loads(result.stdout)
+        
+        # 데이터 유효성 검사 강화
+        if stocks_data and isinstance(stocks_data, list) and stocks_data[0].get('stk_cd'):
+            stock_list = [{'stock_code': s['stk_cd'], 'stock_name': s['stk_nm']} for s in stocks_data]
+            logger.info(f"실시간 상승률 상위 {len(stock_list)}개 종목을 가져왔습니다.")
+            return stock_list
+        else:
+            # 스크립트가 오류 JSON을 반환하는 경우를 처리
+            if isinstance(stocks_data, dict) and stocks_data.get('status') == 'error':
+                logger.error(f"상승률 스크립트에서 오류 반환: {stocks_data.get('message')}")
+            else:
+                logger.error(f"상승률 데이터 형식이 올바르지 않습니다: {stocks_data}")
+            return []
+            
+    except subprocess.CalledProcessError as e:
+        logger.error(f"상승률 스크립트 실행 오류 (종료 코드: {e.returncode}): {e.stderr}")
+        # 오류 출력에서 JSON 파싱 시도
+        try:
+            error_json = json.loads(e.stdout)
+            logger.error(f"스크립트 오류 메시지: {error_json.get('message')}")
+        except json.JSONDecodeError:
+            logger.error(f"스크립트 stdout: {e.stdout}")
+        return []
+    except json.JSONDecodeError:
+        logger.error(f"상승률 스크립트의 JSON 출력 파싱 오류. 출력: {result.stdout}")
+        return []
+    except Exception as e:
+        logger.error(f"상승률 데이터 가져오기 오류: {e}")
+        return []
 
 def search_naver_news(query, client_id, client_secret, display=3):
     """네이버 뉴스 API를 사용하여 뉴스를 검색합니다."""

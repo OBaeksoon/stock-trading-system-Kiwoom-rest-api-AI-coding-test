@@ -5,4 +5,26 @@ gemini generate --model gemini-2.0-flash
 gemini generate --model gemini-1.5-flash
 
 npm install -g @google/gemini-cli to update 
+
 qwen 현제 시골집에서는 실행불가 AIP키 입력 해야함
+
+grop apykey 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
+
+curl https://api.groq.com/openai/v1/chat/completions -s \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer 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" \
+-d '{
+"model": "meta-llama/llama-4-scout-17b-16e-instruct",
+"messages": [{
+    "role": "user",
+    "content": "Explain the importance of fast language models"
+}]
+}'
+
+https://mizrino.app.n8n.cloud/home/workflows
+
+2025년 08월 09일 딥시크 사용을 위해 올라마? 설치 했음 아래는 실행방법임
+ollama run deepseek-r1:8b
+설치된 버전은 한국어 패치가 되여 있지 않은거 같음.
+
+Github AIP키 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
