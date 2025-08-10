@@ -182,6 +182,9 @@ def classify_and_update_theme(conn, news_id):
 
 def process_stock(stock, client_id, client_secret):
     """단일 종목에 대한 뉴스 수집 및 테마 분류를 처리합니다."""
+    # API 요청 간에 약간의 지연을 추가하여 속도 제한을 피합니다.
+    time.sleep(0.1)
+    
     conn = get_db_connection()
     if conn is None:
         return
