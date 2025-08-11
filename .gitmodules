@@ -1,0 +1,6 @@
+[submodule "gemini-superclaude-mcp-server"]
+	path = gemini-superclaude-mcp-server
+	url = https://github.com/StockAutoTrade/gemini-superclaude-mcp-server.git
+[submodule "open-webui"]
+	path = open-webui
+	url = https://github.com/open-webui/open-webui.git
