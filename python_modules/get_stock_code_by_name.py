@@ -10,30 +10,7 @@ import configparser
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    """데이터베이스 연결을 가져옵니다."""
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(current_dir, '..', 'config.ini')
-
-        if not os.path.exists(config_path):
-            logger.error(f"설정 파일을 찾을 수 없습니다: {config_path}")
-            return None
-
-        config = configparser.ConfigParser()
-        config.read(config_path)
-        
-        db_config = config['DB']
-        return mysql.connector.connect(
-            host=db_config.get('HOST'),
-            user=db_config.get('USER'),
-            password=db_config.get('PASSWORD'),
-            database=db_config.get('DATABASE'),
-            port=db_config.getint('PORT', 3306)
-        )
-    except Exception as e:
-        logger.error(f"DB 설정 또는 연결 오류: {e}")
-        return None
+from utils.db_utils import get_db_connection
 
 def get_stock_code_by_name(stock_name):
     """

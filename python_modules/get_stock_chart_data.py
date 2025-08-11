@@ -4,7 +4,7 @@ import logging
 import os
 import configparser
 import pandas as pd
-from kiwoom_api import KiwoomAPI, logger
+from utils.db_utils import get_db_connection
 
 def calculate_moving_averages(df):
     """Pandas를 사용하여 이동평균선을 계산합니다."""

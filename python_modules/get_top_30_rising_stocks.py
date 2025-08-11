@@ -27,32 +27,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    """config.ini에서 DB 정보를 읽어와 연결을 생성합니다."""
-    config = configparser.ConfigParser()
-    if not os.path.exists(CONFIG_FILE):
-        logger.error(f"설정 파일을 찾을 수 없습니다: {CONFIG_FILE}")
-        return None
-    
-    config.read(CONFIG_FILE)
-    
-    try:
-        db_config = {
-            'host': config.get('DB', 'HOST'),
-            'user': config.get('DB', 'USER'),
-            'password': config.get('DB', 'PASSWORD'),
-            'database': config.get('DB', 'DATABASE'),
-            'port': config.getint('DB', 'PORT')
-        }
-        conn = mysql.connector.connect(**db_config)
-        logger.info("데이터베이스 연결 성공.")
-        return conn
-    except (configparser.NoSectionError, configparser.NoOptionError) as e:
-        logger.error(f"config.ini 파일에 [DB] 섹션 또는 필요한 키가 없습니다. ({e})")
-        return None
-    except mysql.connector.Error as err:
-        logger.error(f"데이터베이스 연결 오류: {err}")
-        return None
+from utils.db_utils import get_db_connection
 
 def get_api_settings_from_db():
     """데이터베이스에서 API 설정(키, 시크릿)을 가져옵니다."""

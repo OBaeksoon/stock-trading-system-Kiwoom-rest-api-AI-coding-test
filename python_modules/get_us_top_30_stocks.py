@@ -17,20 +17,7 @@ PROJECT_ROOT = os.path.join(CURRENT_DIR, '..')
 CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
 
 # --- DB 연결 함수 ---
-def get_db_connection():
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
-    try:
-        return mysql.connector.connect(
-            host=config.get('DB', 'HOST'),
-            user=config.get('DB', 'USER'),
-            password=config.get('DB', 'PASSWORD'),
-            database=config.get('DB', 'DATABASE'),
-            port=config.getint('DB', 'PORT')
-        )
-    except (mysql.connector.Error, configparser.Error) as e:
-        print(f"Database connection failed: {e}")
-        return None
+from utils.db_utils import get_db_connection
 
 # --- 데이터 가져오기 함수들 ---
 def get_korean_name_from_naver(ticker):
@@ -64,63 +51,78 @@ def get_major_indices_data():
     return index_data
 
 def get_top_30_us_stocks_data():
-    """Yahoo Finance에서 상승률 상위 종목 데이터를 가져와 한글명과 테마를 추가합니다."""
-    url = "https://finance.yahoo.com/gainers"
-    headers = {'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'en-US,en;q=0.9'}
+    """S&P 500 종목의 등락률을 직접 계산하여 상승률 상위 30개 데이터를 반환합니다."""
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        tables = pd.read_html(response.text)
-        if not tables: return []
-        
-        df = tables[0][['Symbol', 'Name', 'Price']].copy()
-        price_split = df['Price'].str.split(n=1, expand=True)
-        df['last_price'] = price_split[0]
-        
-        def extract_change(text):
-            match = re.search(r'([+-]?[\d,]+\.\d+)\s+\(([+-]?[\d,]+\.\d+)%\)', str(text))
-            return match.group(1).replace(',', '') if match else None
-        def extract_percent_change(text):
-            match = re.search(r'([+-]?[\d,]+\.\d+)\s+\(([+-]?[\d,]+\.\d+)%\)', str(text))
-            return match.group(2).replace(',', '') if match else None
+        # 위키피디아에서 S&P 500 종목 목록을 안정적으로 가져옵니다.
+        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+        sp500_df = pd.read_html(url)[0]
+        tickers = sp500_df['Symbol'].tolist()
+        print(f"S&P 500 목록에서 {len(tickers)}개 티커를 가져왔습니다.")
+    except Exception as e:
+        print(f"S&P 500 목록을 가져오는 데 실패했습니다: {e}")
+        return []
 
-        df['change'] = price_split[1].apply(extract_change)
-        df['percent_change'] = price_split[1].apply(extract_percent_change)
-        
-        df.rename(columns={'Symbol': 'ticker', 'Name': 'company_name'}, inplace=True)
-        df.drop(columns=['Price'], inplace=True)
+    try:
+        # 모든 티커의 최근 2일치 데이터를 한 번에 다운로드합니다.
+        data = yf.download(tickers, period="2d", progress=False, threads=True)
+        if data.empty:
+            print("yfinance에서 데이터를 다운로드하지 못했습니다.")
+            return []
 
-        for col in ['last_price', 'change', 'percent_change']:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-        df.dropna(inplace=True)
+        # 각 티커별로 등락률 계산
+        close_prices = data['Close']
+        if len(close_prices) < 2:
+            print("계산에 필요한 충분한 데이터가 없습니다 (최소 2일 필요).")
+            return []
+            
+        prev_close = close_prices.iloc[-2]
+        last_price = close_prices.iloc[-1]
         
-        df['theme'] = ''
-        tickers = df['ticker'].tolist()
+        percent_change = ((last_price - prev_close) / prev_close) * 100
+        change = last_price - prev_close
+
+        # 결과를 DataFrame으로 합치기
+        results_df = pd.DataFrame({
+            'ticker': last_price.index,
+            'last_price': last_price.values,
+            'change': change.values,
+            'percent_change': percent_change.values
+        })
         
-        # yfinance로 여러 티커의 정보를 한 번에 가져옵니다.
-        yf_tickers = yf.Tickers(tickers)
-        for ticker_obj in yf_tickers.tickers.values():
+        # 유효하지 않은 데이터(NaN) 제거 및 등락률 순으로 정렬
+        results_df.dropna(inplace=True)
+        top_30_gainers = results_df.sort_values(by='percent_change', ascending=False).head(30)
+
+        # 회사명 및 테마(섹터) 정보 추가
+        top_30_tickers = top_30_gainers['ticker'].tolist()
+        yf_tickers = yf.Tickers(top_30_tickers)
+        
+        company_names = []
+        themes = []
+        for ticker in top_30_tickers:
             try:
-                info = ticker_obj.info
-                ticker = info.get('symbol')
-                if not ticker: continue
-                
-                # 테마(섹터) 정보 추가
-                theme = info.get('sector', 'N/A')
-                df.loc[df['ticker'] == ticker, 'theme'] = theme
-                
-                # 한글 종목명 조회 및 업데이트
+                info = yf_tickers.tickers[ticker].info
+                # 네이버 금융에서 한글 이름 조회 시도, 실패 시 yfinance의 영문 이름 사용
                 korean_name = get_korean_name_from_naver(ticker)
-                if korean_name:
-                    df.loc[df['ticker'] == ticker, 'company_name'] = korean_name
-
+                company_names.append(korean_name or info.get('shortName', 'N/A'))
+                themes.append(info.get('sector', 'N/A'))
             except Exception:
-                continue # 개별 티커 오류는 무시
+                company_names.append('N/A')
+                themes.append('N/A')
 
-        return [tuple(x) for x in df[['ticker', 'company_name', 'theme', 'last_price', 'change', 'percent_change']].to_numpy()]
-        
-    except (requests.exceptions.RequestException, ValueError) as e:
-        print(f"Failed to fetch or parse top stocks data: {e}")
+        top_30_gainers['company_name'] = company_names
+        top_30_gainers['theme'] = themes
+
+        # 최종 데이터 포맷으로 변환
+        final_data = [
+            tuple(x) for x in top_30_gainers[[
+                'ticker', 'company_name', 'theme', 'last_price', 'change', 'percent_change'
+            ]].to_numpy()
+        ]
+        return final_data
+
+    except Exception as e:
+        print(f"상승률 상위 종목 데이터 처리 중 오류 발생: {e}")
         return []
 
 # --- 데이터베이스 저장 함수 ---

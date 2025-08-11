@@ -11,30 +11,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
 CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
 
-def get_db_connection():
-    """config.ini에서 DB 정보를 읽어와 연결을 생성합니다."""
-    config = configparser.ConfigParser()
-    if not os.path.exists(CONFIG_FILE):
-        logger.error(f"설정 파일을 찾을 수 없습니다: {CONFIG_FILE}")
-        return None
-    
-    config.read(CONFIG_FILE)
-    
-    try:
-        db_config = {
-            'host': config.get('DB', 'HOST'),
-            'user': config.get('DB', 'USER'),
-            'password': config.get('DB', 'PASSWORD'),
-            'database': config.get('DB', 'DATABASE'),
-            'port': config.getint('DB', 'PORT')
-        }
-        return mysql.connector.connect(**db_config)
-    except (configparser.NoSectionError, configparser.NoOptionError) as e:
-        logger.error(f"config.ini 파일에 [DB] 섹션 또는 필요한 키가 없습니다. ({e})")
-        return None
-    except mysql.connector.Error as err:
-        logger.error(f"데이터베이스 연결 오류: {err}")
-        return None
+from utils.db_utils import get_db_connection
 
 def get_all_stocks(api, market_type_code, market_name):
     """
