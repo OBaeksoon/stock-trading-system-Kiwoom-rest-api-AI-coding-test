@@ -2,12 +2,15 @@
 // config.ini 파일의 DB 정보를 사용하여 데이터베이스에 연결합니다.
 header('Content-Type: application/json');
 
+// config.ini 파일에서 데이터베이스 설정을 읽어옵니다.
+$config = parse_ini_file('config.ini', true);
+
 // --- 데이터베이스 연결 설정 ---
-$host = 'localhost';
-$db   = 'stock';
-$user = 'stock';
-$pass = '01P16NYJ3jwcCl9';
-$port = '3306';
+$host = $config['DB']['HOST'];
+$db   = $config['DB']['DATABASE'];
+$user = $config['DB']['USER'];
+$pass = $config['DB']['PASSWORD'];
+$port = $config['DB']['PORT'];
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
