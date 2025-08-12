@@ -19,9 +19,8 @@ function execute_python_script($command, &$output, &$return_var) {
 
 if (!empty($search_query)) {
     try {
-        $pdo = new PDO("mysql:host={$config['DB']['HOST']};dbname={$config['DB']['DATABASE']};charset=utf8mb4", 
-                      $config['DB']['USER'], $config['DB']['PASSWORD']);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        require_once 'db_connection.php';
+        $pdo = get_db_connection();
         
         $actual_stock_code = $search_query;
         
