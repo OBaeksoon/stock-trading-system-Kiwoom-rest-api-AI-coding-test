@@ -1,17 +1,36 @@
 <?php
-// --- 데이터베이스 연결 설정 ---
-$config = parse_ini_file('../config.ini');
-$db_host = $config['HOST'];
-$db_user = $config['USER'];
-$db_pass = $config['PASSWORD'];
-$db_name = $config['DATABASE'];
-$db_port = $config['PORT'];
+// 에러 리포팅 활성화 (개발용)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
+// 로그 파일 경로 설정
+define('LOG_FILE', __DIR__ . '/../logs/themed_news.log');
+
+function write_log($message) {
+    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
+}
+
+write_log("MD/themed_news.php 스크립트 시작");
+
+// --- 데이터베이스 연결 설정 ---
+$config_file = __DIR__ . '/../config.ini';
+if (!file_exists($config_file)) {
+    write_log("오류: config.ini 파일을 찾을 수 없습니다.");
+    die("<p class=\"error\">오류: config.ini 파일을 찾을 수 없습니다.</p>");
+}
+$config = parse_ini_file($config_file, true);
+if ($config === false || !isset($config['DB'])) {
+    write_log("오류: config.ini 파일의 [DB] 섹션이 유효하지 않습니다.");
+    die("<p class=\"error\">오류: config.ini 파일의 [DB] 섹션이 유효하지 않습니다.</p>");
+}
+
+$conn = new mysqli($config['DB']['HOST'], $config['DB']['USER'], $config['DB']['PASSWORD'], $config['DB']['DATABASE'], $config['DB']['PORT']);
 
 if ($conn->connect_error) {
+    write_log("데이터베이스 연결 실패: " . $conn->connect_error);
     die("Connection failed: " . $conn->connect_error);
 }
+write_log("데이터베이스 연결 성공.");
 
 // --- 테마별 뉴스 개수 조회 ---
 $sql = "SELECT theme, COUNT(*) as news_count 
@@ -19,15 +38,25 @@ $sql = "SELECT theme, COUNT(*) as news_count
         WHERE theme IS NOT NULL AND theme != '' 
         GROUP BY theme 
         ORDER BY news_count DESC";
+write_log("테마별 뉴스 개수 조회 쿼리 실행: " . $sql);
 $result = $conn->query($sql);
 
 $themes = [];
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $themes[] = $row;
+if ($result) {
+    if ($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $themes[] = $row;
+        }
+        write_log("테마별 뉴스 조회 성공. 총 " . count($themes) . "개 테마 발견.");
+    } else {
+        write_log("테마별 뉴스 조회 결과: 데이터 없음.");
     }
+} else {
+    write_log("테마별 뉴스 조회 쿼리 실패: " . $conn->error);
 }
 $conn->close();
+write_log("데이터베이스 연결 종료.");
+write_log("MD/themed_news.php 스크립트 종료");
 ?>
 
 <!DOCTYPE html>
@@ -101,10 +130,15 @@ $conn->close();
         <h1>주요 테마별 뉴스 현황</h1>
         <?php if (!empty($themes)): ?>
             <div class="theme-grid">
-                <?php foreach ($themes as $theme): ?>
-                    <a href="display_theme_news_details.php?theme=<?php echo urlencode($theme['theme']); ?>" class="theme-card">
-                        <h2><?php echo htmlspecialchars($theme['theme']); ?></h2>
-                        <p><span class="count"><?php echo $theme['news_count']; ?></span>개의 관련 뉴스</p>
+                <?php foreach ($themes as $theme):
+                    // Ensure theme and news_count are properly escaped for HTML output
+                    $safe_theme = htmlspecialchars($theme['theme']);
+                    $safe_news_count = htmlspecialchars($theme['news_count']);
+                    $encoded_theme = urlencode($theme['theme']);
+                ?>
+                    <a href="display_theme_news_details.php?theme=<?php echo $encoded_theme; ?>" class="theme-card">
+                        <h2><?php echo $safe_theme; ?></h2>
+                        <p><span class="count"><?php echo $safe_news_count; ?></span>개의 관련 뉴스</p>
                     </a>
                 <?php endforeach; ?>
             </div>

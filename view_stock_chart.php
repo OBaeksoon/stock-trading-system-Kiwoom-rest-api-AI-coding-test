@@ -128,18 +128,23 @@
         if (isCode) {
             currentStockCode = query;
             currentStockName = `종목코드: ${query}`;
+            console.log(`[searchStock] 종목코드 직접 입력: ${currentStockCode}`);
             await loadChartData(currentChartType);
         } else {
             loadingEl.style.display = 'block';
             try {
+                console.log(`[searchStock] 종목명으로 종목코드 검색 요청: ${query}`);
                 const response = await fetch(`search_stock_by_name.php?stock_name=${encodeURIComponent(query)}`);
                 const data = await response.json();
+                console.log(`[searchStock] 종목명 검색 응답:`, data);
                 if (data.error) throw new Error(data.error);
                 currentStockCode = data.stock_code;
                 currentStockName = data.found_name || query;
+                console.log(`[searchStock] 종목명 검색 성공. 코드: ${currentStockCode}, 이름: ${currentStockName}`);
                 await loadChartData(currentChartType);
             } catch (error) {
                 showError(error.message);
+                console.error(`[searchStock] 종목명 검색 오류:`, error);
             } finally {
                 loadingEl.style.display = 'none';
             }
@@ -152,9 +157,14 @@
         loadingEl.style.display = 'block';
         errorEl.style.display = 'none';
         try {
+            console.log(`[loadChartData] 차트 데이터 요청: 종목코드=${currentStockCode}, 차트종류=${chartType}`);
             const response = await fetch(`fetch_chart_data.php?stock_code=${currentStockCode}&chart_type=${chartType}`);
-            if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
+            }
             const data = await response.json();
+            console.log(`[loadChartData] 차트 데이터 응답:`, data);
             if (data.error) throw new Error(data.error);
             if (!Array.isArray(data) || data.length === 0) throw new Error('차트 데이터가 없습니다.');
             
@@ -164,12 +174,14 @@
 
         } catch (error) {
             showError(error.message);
+            console.error(`[loadChartData] 차트 데이터 로딩 오류:`, error);
         } finally {
             loadingEl.style.display = 'none';
         }
     }
 
     function renderCharts(data, chartType) {
+        console.log(`[renderCharts] 차트 렌더링 시작. 데이터 길이: ${data.length}, 차트 종류: ${chartType}`, data);
         if (priceChart) priceChart.destroy();
         if (volumeChart) volumeChart.destroy();
 
@@ -182,6 +194,7 @@
             // 일/주봉은 날짜만 비교
             return a.date.substring(0, 8).localeCompare(b.date.substring(0, 8));
         });
+        console.log(`[renderCharts] 정렬된 데이터:`, sortedData);
 
         // 날짜 파싱 함수
         const parseDate = (dateStr) => {
@@ -195,6 +208,7 @@
 
         // 캔들 데이터 생성
         const priceData = sortedData.map(d => ({ x: parseDate(d.date), o: d.open, h: d.high, l: d.low, c: d.close }));
+        console.log(`[renderCharts] 캔들 데이터 (priceData):`, priceData);
 
         // --- Price Chart ---
         const priceDatasets = [{
@@ -281,6 +295,7 @@
                 backgroundColor: isUp ? '#d84033' : '#1260cc'
             };
         });
+        console.log(`[renderCharts] 거래량 데이터 (volumeData):`, volumeData);
 
         volumeChart = new Chart(volumeCtx, {
             type: 'bar',
@@ -314,6 +329,7 @@
     }
     
     function clearState() {
+        console.log("[clearState] 차트 및 상태 초기화.");
         if (priceChart) priceChart.destroy();
         if (volumeChart) volumeChart.destroy();
         if (autoRefreshInterval) clearInterval(autoRefreshInterval);
@@ -325,12 +341,14 @@
     }
 
     function showError(message) {
+        console.error(`[showError] 오류 발생: ${message}`);
         clearState();
         errorEl.textContent = `오류: ${message}`;
         errorEl.style.display = 'block';
     }
 
     function updateHeaderInfo(latestData) {
+        console.log(`[updateHeaderInfo] 헤더 정보 업데이트. 최신 데이터:`, latestData);
         if (!latestData) return;
 
         const price = latestData.close;
@@ -359,6 +377,7 @@
     }
 
     function updateControlsUI(chartType) {
+        console.log(`[updateControlsUI] 컨트롤 UI 업데이트. 차트 종류: ${chartType}`);
         chartOptionsEl.style.display = 'flex';
         
         document.querySelectorAll('.chart-type-controls button').forEach(btn => btn.classList.remove('active'));
@@ -383,6 +402,7 @@
     }
 
     function toggleMA(period) {
+        console.log(`[toggleMA] ${period}MA 토글.`);
         const maDataset = priceChart.data.datasets.find(d => d.label === `MA ${period}`);
         if (maDataset) {
             maDataset.hidden = !maDataset.hidden;
@@ -391,6 +411,7 @@
     }
 
     function toggleAutoRefresh(checked) {
+        console.log(`[toggleAutoRefresh] 자동 갱신 토글: ${checked}`);
         if (checked) {
             autoRefreshInterval = setInterval(() => loadChartData(currentChartType), 60000);
         } else {
@@ -400,6 +421,7 @@
     }
 
     function toggleDarkMode(checked) {
+        console.log(`[toggleDarkMode] 다크 모드 토글: ${checked}`);
         document.documentElement.classList.toggle('dark-mode', checked);
         // 차트가 이미 그려진 경우 다시 그려서 색상 반영
         if(currentStockCode) {

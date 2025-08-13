@@ -151,6 +151,7 @@
         chartTypeRadios.forEach(radio => {
             radio.addEventListener('change', function() {
                 if (currentStockCode) {
+                    console.log(`[display_stock_details] 차트 유형 변경: ${this.value}`);
                     fetchChartData(currentStockCode, this.value);
                 }
             });
@@ -167,6 +168,7 @@
                 alert('종목 코드 또는 종목명을 입력해주세요.');
                 return;
             }
+            console.log(`[display_stock_details] 종목 상세 정보 요청: ${searchTerm}`);
 
             // Clear previous data
             stockInfoCard.style.display = 'none';
@@ -177,6 +179,7 @@
             try {
                 const response = await fetch(`get_stock_details.php?search=${encodeURIComponent(searchTerm)}`);
                 const data = await response.json();
+                console.log(`[display_stock_details] 종목 상세 정보 응답:`, data);
 
                 if (data && data.stock_code) {
                     currentStockCode = data.stock_code;
@@ -186,42 +189,50 @@
                     industryDisplay.textContent = data.industry || 'N/A';
                     businessTypeDisplay.textContent = data.business_type || 'N/A';
                     stockInfoCard.style.display = 'block';
+                    console.log(`[display_stock_details] 종목 정보 업데이트: ${data.stock_name} (${data.stock_code})`);
 
                     // Automatically load the default chart type (daily)
                     const selectedChartType = document.querySelector('input[name="chartType"]:checked').value;
+                    console.log(`[display_stock_details] 기본 차트 유형 로드: ${selectedChartType}`);
                     fetchChartData(currentStockCode, selectedChartType);
 
                 } else {
                     alert('해당 종목을 찾을 수 없습니다.');
                     stockInfoCard.style.display = 'none';
+                    console.warn(`[display_stock_details] 종목을 찾을 수 없음: ${searchTerm}`);
                 }
             } catch (error) {
-                console.error('Error fetching stock details:', error);
+                console.error('[display_stock_details] Error fetching stock details:', error);
                 alert('종목 정보를 가져오는 중 오류가 발생했습니다.');
                 stockInfoCard.style.display = 'none';
             }
         }
 
         async function fetchChartData(stockCode, chartType) {
+            console.log(`[display_stock_details] 차트 데이터 요청: 종목코드=${stockCode}, 차트유형=${chartType}`);
             chartDataContainer.innerHTML = '<p class="no-data">차트 데이터를 불러오는 중...</p>';
             chartNoDataMessage.style.display = 'none';
 
             try {
                 const response = await fetch(`fetch_chart_data.php?stock_code=${encodeURIComponent(stockCode)}&chart_type=${encodeURIComponent(chartType)}`);
                 const chartData = await response.json();
+                console.log(`[display_stock_details] 차트 데이터 응답:`, chartData);
 
                 if (chartData && chartData.length > 0) {
                     renderChartTable(chartData, chartType);
+                    console.log(`[display_stock_details] 차트 데이터 테이블 렌더링 완료.`);
                 } else {
                     chartDataContainer.innerHTML = '<p class="no-data">선택된 차트 유형의 데이터가 없습니다.</p>';
+                    console.warn(`[display_stock_details] 차트 데이터 없음: 종목코드=${stockCode}, 차트유형=${chartType}`);
                 }
             } catch (error) {
-                console.error('Error fetching chart data:', error);
+                console.error('[display_stock_details] Error fetching chart data:', error);
                 chartDataContainer.innerHTML = '<p class="no-data">차트 데이터를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
         function renderChartTable(data, chartType) {
+            console.log(`[display_stock_details] 차트 테이블 렌더링 시작. 데이터 길이: ${data.length}, 차트 유형: ${chartType}`, data);
             let tableHtml = '<table><thead><tr>';
             let headers = [];
 
@@ -250,6 +261,30 @@
                 "stk_adj_rate": "수정비율",
                 "stk_adj_date": "수정일",
                 "stk_adj_type": "수정구분", // Add more mappings as needed based on actual API response
+                // get_stock_chart_data.py에서 반환하는 필드명에 맞게 추가
+                "date": "날짜",
+                "open_pric": "시가",
+                "high_pric": "고가",
+                "low_pric": "저가",
+                "close": "종가",
+                "volume": "거래량",
+                "cur_prc": "현재가",
+                "trde_qty": "거래량",
+                "trde_prica": "거래대금",
+                "dt": "날짜",
+                "upd_stkpc_tp": "등락구분",
+                "upd_rt": "등락률",
+                "bic_inds_tp": "업종구분",
+                "sm_inds_tp": "소업종구분",
+                "stk_infr": "종목정보",
+                "upd_stkpc_event": "수정주가이벤트",
+                "pred_close_pric": "예상체결가",
+                "SMA_5": "SMA_5",
+                "SMA_10": "SMA_10",
+                "SMA_20": "SMA_20",
+                "SMA_60": "SMA_60",
+                "SMA_120": "SMA_120",
+                "SMA_240": "SMA_240",
             };
 
             headers.forEach(header => {
@@ -262,11 +297,11 @@
                 headers.forEach(header => {
                     let displayValue = row[header];
                     // Format numbers for price/volume, etc.
-                    if (['stk_prc', 'stk_oprc', 'stk_hprc', 'stk_lprc', 'stk_clprc', 'stk_vol'].includes(header)) {
+                    if (['stk_prc', 'stk_oprc', 'stk_hprc', 'stk_lprc', 'stk_clprc', 'stk_vol', 'open_pric', 'high_pric', 'low_pric', 'close', 'volume', 'cur_prc', 'trde_qty', 'trde_prica'].includes(header)) {
                         displayValue = formatNumber(displayValue);
                     }
                     // Format percentage for 등락률
-                    if (header === 'stk_chgrt') {
+                    if (header === 'stk_chgrt' || header === 'upd_rt') {
                         displayValue = parseFloat(displayValue).toFixed(2) + '%';
                     }
                     tableHtml += `<td>${displayValue}</td>`;

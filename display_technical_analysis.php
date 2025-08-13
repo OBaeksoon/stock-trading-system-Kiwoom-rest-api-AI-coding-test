@@ -1,4 +1,17 @@
 <?php
+// 에러 리포팅 활성화 (개발용)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// 로그 파일 경로 설정
+define('LOG_FILE', __DIR__ . '/../logs/display_technical_analysis.log');
+
+function write_log($message) {
+    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
+}
+
+write_log("display_technical_analysis.php 스크립트 시작");
+
 $config = parse_ini_file('config.ini', true);
 
 $search_query = isset($_GET['stock_code']) ? trim($_GET['stock_code']) : '';
@@ -7,10 +20,14 @@ $error_message = '';
 $debug_info = '';
 $update_requested = isset($_GET['update']) && $_GET['update'] == '1';
 
-function execute_python_script($command, &$output, &$return_var) {
+function execute_python_script($command, & $output, & $return_var, $log_prefix = "") {
+    write_log("{$log_prefix}Python 스크립트 실행 명령: " . $command);
     exec($command, $output, $return_var);
+    write_log("{$log_prefix}Python 스크립트 종료 코드: " . $return_var);
+    write_log("{$log_prefix}Python 스크립트 STDOUT: " . implode("\n", $output));
+    
     // UTF-8 인코딩 시도
-    foreach ($output as &$line) {
+    foreach ($output as & $line) {
         if (!mb_check_encoding($line, 'UTF-8')) {
             $line = mb_convert_encoding($line, 'UTF-8', 'EUC-KR');
         }
@@ -18,61 +35,80 @@ function execute_python_script($command, &$output, &$return_var) {
 }
 
 if (!empty($search_query)) {
+    write_log("검색 쿼리 수신: " . $search_query);
     try {
         require_once 'db_connection.php';
         $pdo = get_db_connection();
+        write_log("데이터베이스 연결 성공.");
         
         $actual_stock_code = $search_query;
         
         // 검색어가 종목코드가 아니면, 파이썬 스크립트로 종목코드 조회
         if (!preg_match('/^\d{6}$/', $search_query)) {
+            write_log("종목명으로 종목코드 검색 시작: " . $search_query);
             $escaped_query = escapeshellarg($search_query);
-            $command = "python3 " . __DIR__ . "/python_modules/search_stock_by_name.py " . $escaped_query;
-            execute_python_script($command, $py_output, $return_var);
+            $command = "python3 " . __DIR__ . "/python_modules/get_stock_code_by_name.py " . $escaped_query;
+            execute_python_script($command, $py_output, $return_var, "종목코드 검색: ");
             
             if ($return_var === 0 && !empty($py_output)) {
-                $result = json_decode(implode('', $py_output), true);
+                $result_json = implode('', $py_output);
+                $result = json_decode($result_json, true);
+                write_log("종목코드 검색 결과 JSON: " . $result_json);
+
                 if (isset($result['stock_code'])) {
                     $actual_stock_code = $result['stock_code'];
                     $found_name = isset($result['found_name']) ? $result['found_name'] : $search_query;
                     $debug_info = "종목명 '{$search_query}'을(를) 종목코드 '{$actual_stock_code}' ({$found_name})로 변환했습니다.";
+                    write_log($debug_info);
                 } else {
                     $error_message = "'{$search_query}'에 해당하는 종목을 찾을 수 없습니다. " . ($result['error'] ?? '');
+                    write_log("오류: " . $error_message);
                 }
             } else {
                 $error_message = "종목 검색 스크립트 실행 중 오류가 발생했습니다.";
                 $debug_info = implode("\n", $py_output);
+                write_log("오류: " . $error_message . " 디버그 정보: " . $debug_info);
             }
         }
         
         if (empty($error_message)) {
+            write_log("기술적 분석 데이터 존재 여부 확인: " . $actual_stock_code);
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM technical_analysis WHERE stock_code = ?");
             $stmt->execute([$actual_stock_code]);
             $data_exists = $stmt->fetchColumn() > 0;
+            write_log("기술적 분석 데이터 존재 여부: " . ($data_exists ? "있음" : "없음"));
 
             // 데이터가 없거나 업데이트 요청이 있을 경우 데이터 파이프라인 실행
             if (!$data_exists || $update_requested) {
-                $debug_info .= "<br>데이터를 생성/업데이트합니다...";
+                $debug_info .= "<br>데이터를 생성/업데이트합니다... (로그 파일: logs/display_technical_analysis.log 확인)";
+                write_log("데이터 생성/업데이트 요청됨.");
                 
                 // 1. 차트 데이터 수집 (get_stock_chart_data.py)
+                write_log("차트 데이터 수집 시작: " . $actual_stock_code);
                 $chart_command = "python3 " . __DIR__ . "/python_modules/get_stock_chart_data.py " . escapeshellarg($actual_stock_code) . " daily 2>&1";
-                execute_python_script($chart_command, $chart_output, $chart_return_var);
+                execute_python_script($chart_command, $chart_output, $chart_return_var, "차트 데이터 수집: ");
                 if ($chart_return_var !== 0) {
                     $error_message .= "<br>차트 데이터 수집 스크립트 오류: <pre>" . htmlspecialchars(implode("\n", $chart_output)) . "</pre>";
+                    write_log("차트 데이터 수집 오류: " . $error_message);
                 } else {
                     $debug_info .= "<br>차트 데이터 수집 완료.";
+                    write_log("차트 데이터 수집 완료.");
                     // 2. 기술적 분석 데이터 생성 (get_technical_analysis.py)
+                    write_log("기술적 분석 데이터 생성 시작: " . $actual_stock_code);
                     $tech_command = "python3 " . __DIR__ . "/python_modules/get_technical_analysis.py " . escapeshellarg($actual_stock_code) . " 2>&1";
-                    execute_python_script($tech_command, $tech_output, $tech_return_var);
+                    execute_python_script($tech_command, $tech_output, $tech_return_var, "기술적 분석: ");
                     if ($tech_return_var !== 0) {
                         $error_message .= "<br>기술적 분석 스크립트 오류: <pre>" . htmlspecialchars(implode("\n", $tech_output)) . "</pre>";
+                        write_log("기술적 분석 스크립트 오류: " . $error_message);
                     } else {
                          $debug_info .= "<br>기술적 분석 완료.";
+                         write_log("기술적 분석 완료.");
                     }
                 }
             }
             
             // 최종적으로 DB에서 기술적 분석 데이터 조회
+            write_log("DB에서 기술적 분석 데이터 조회 시작: " . $actual_stock_code);
             $stmt = $pdo->prepare(
                 "SELECT * FROM technical_analysis 
                 WHERE stock_code = ? 
@@ -81,16 +117,23 @@ if (!empty($search_query)) {
             ");
             $stmt->execute([$actual_stock_code]);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            write_log("DB 조회 결과 (데이터 수): " . count($data));
 
             if (empty($data) && empty($error_message)) {
                  $error_message = "분석 데이터를 생성하지 못했습니다. 입력한 종목코드를 확인해주세요.";
+                 write_log("오류: " . $error_message);
             }
         }
         
     } catch (PDOException $e) {
         $error_message = "데이터베이스 연결 오류: " . $e->getMessage();
+        write_log("데이터베이스 연결 오류: " . $e->getMessage());
     }
+} else {
+    write_log("검색 쿼리가 비어 있습니다.");
 }
+
+write_log("display_technical_analysis.php 스크립트 종료");
 ?>
 <!DOCTYPE html>
 <html lang="ko">

@@ -1,4 +1,15 @@
 <?php
+// 에러 리포팅 활성화 (개발용)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// 로그 파일 경로 설정
+define('LOG_FILE', __DIR__ . '/../logs/stock_data_fetcher.log');
+
+function write_log($message) {
+    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
+}
+
 /**
  * 실시간 상승률 상위 30위 종목 데이터를 데이터베이스에서 가져옵니다.
  *
@@ -7,6 +18,8 @@
  */
 function get_top_30_rising_stocks(PDO $pdo): array
 {
+    write_log("get_top_30_rising_stocks 함수 시작.");
+
     // SQL 쿼리: 상승률 상위 30위 종목과 관련 뉴스 3개를 함께 조회합니다.
     // ROW_NUMBER()를 사용하여 각 종목별로 최신 뉴스 3개만 선택합니다.
     $sql = "
@@ -26,11 +39,14 @@ function get_top_30_rising_stocks(PDO $pdo): array
         ORDER BY
             t.rank ASC, n.pub_date DESC
     ";
+    write_log("SQL 쿼리 실행: " . preg_replace("/
+/", " ", $sql)); // 쿼리 로깅 (줄바꿈 제거)
 
     try {
         // 쿼리를 실행하고 결과를 가져옵니다.
         $stmt = $pdo->query($sql);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        write_log("쿼리 실행 성공. 조회된 결과 수: " . count($results));
 
         // 결과를 연관 배열로 변환하여 처리합니다.
         $stocks = [];
@@ -57,13 +73,14 @@ function get_top_30_rising_stocks(PDO $pdo): array
                 ];
             }
         }
-
+        write_log("주식 데이터 처리 완료. 최종 종목 수: " . count($stocks));
         return $stocks;
 
     } catch (PDOException $e) {
-        // 프로덕션 환경에서는 오류를 로깅하는 것이 좋습니다.
-        error_log("SQL Error: " . $e->getMessage());
+        write_log("SQL Error in get_top_30_rising_stocks: " . $e->getMessage());
         return []; // 오류 발생 시 빈 배열 반환
+    } finally {
+        write_log("get_top_30_rising_stocks 함수 종료.");
     }
 }
 ?>

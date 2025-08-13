@@ -1,11 +1,29 @@
 <?php
+// 에러 리포팅 활성화 (개발용)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// 로그 파일 경로 설정
+define('LOG_FILE', __DIR__ . '/../logs/display_top_30_rising_stocks.log');
+
+function write_log($message) {
+    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
+}
+
+write_log("display_top_30_rising_stocks.php 스크립트 시작");
+
 // 데이터베이스 연결 및 데이터 페칭 로직을 포함합니다.
 require_once 'db_connection.php';
+write_log("db_connection.php 로드 완료.");
 require_once 'stock_data_fetcher.php';
+write_log("stock_data_fetcher.php 로드 완료.");
 
 // 데이터베이스에서 상위 30개 상승 종목 데이터를 가져옵니다.
+write_log("get_top_30_rising_stocks 함수 호출 시작.");
 $stocks = get_top_30_rising_stocks($conn);
+write_log("get_top_30_rising_stocks 함수 호출 완료. 조회된 종목 수: " . count($stocks));
 
+write_log("display_top_30_rising_stocks.php 스크립트 종료");
 ?>
 <!DOCTYPE html>
 <html lang="ko">

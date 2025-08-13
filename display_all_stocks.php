@@ -3,13 +3,24 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// 로그 파일 경로 설정
+define('LOG_FILE', __DIR__ . '/../logs/display_all_stocks.log');
+
+function write_log($message) {
+    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
+}
+
+write_log("display_all_stocks.php 스크립트 시작");
+
 // 설정 파일 로드
 $config_file = __DIR__ . '/config.ini';
 if (!file_exists($config_file)) {
+    write_log("오류: config.ini 파일을 찾을 수 없습니다.");
     die("<p class=\"error\">오류: config.ini 파일을 찾을 수 없습니다.</p>");
 }
 $config = parse_ini_file($config_file, true);
 if ($config === false || !isset($config['DB'])) {
+    write_log("오류: config.ini 파일의 [DB] 섹션이 유효하지 않습니다.");
     die("<p class=\"error\">오류: config.ini 파일의 [DB] 섹션이 유효하지 않습니다.</p>");
 }
 
@@ -24,7 +35,9 @@ try {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]
     );
+    write_log("데이터베이스 연결 성공.");
 } catch (PDOException $e) {
+    write_log("데이터베이스 연결 실패: " . $e->getMessage());
     die("<p class=\"error\">데이터베이스 연결 실패: " . $e->getMessage() . "</p>");
 }
 
@@ -41,13 +54,26 @@ $stats_sql = "
       AND previous_day_closing_price REGEXP '^[+-]?[0-9,.]+$' 
       AND current_price REGEXP '^[+-]?[0-9,.]+$'
 ";
-$stats = $pdo->query($stats_sql)->fetch();
+try {
+    $stats = $pdo->query($stats_sql)->fetch();
+    write_log("종목 통계 조회 성공: " . json_encode($stats));
+} catch (PDOException $e) {
+    write_log("종목 통계 조회 실패: " . $e->getMessage());
+    $stats = ['rising_count' => 0, 'falling_count' => 0]; // 오류 시 기본값 설정
+}
+
 
 // 2. 페이징 설정
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 100;
 $offset = ($page - 1) * $limit;
-$total_rows = $pdo->query('SELECT COUNT(*) FROM stock_details')->fetchColumn();
+try {
+    $total_rows = $pdo->query('SELECT COUNT(*) FROM stock_details')->fetchColumn();
+    write_log("총 종목 수 조회 성공: " . $total_rows);
+} catch (PDOException $e) {
+    write_log("총 종목 수 조회 실패: " . $e->getMessage());
+    $total_rows = 0; // 오류 시 기본값 설정
+}
 $total_pages = ceil($total_rows / $limit);
 
 // 3. 메인 데이터 조회 (최신 뉴스는 별도 조회)
@@ -58,11 +84,18 @@ $main_sql = "
     ORDER BY stock_name ASC
     LIMIT :limit OFFSET :offset
 ";
-$stmt = $pdo->prepare($main_sql);
-$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->execute();
-$stocks = $stmt->fetchAll();
+try {
+    $stmt = $pdo->prepare($main_sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $stocks = $stmt->fetchAll();
+    write_log("메인 종목 데이터 조회 성공. 조회된 종목 수: " . count($stocks));
+} catch (PDOException $e) {
+    write_log("메인 종목 데이터 조회 실패: " . $e->getMessage());
+    $stocks = []; // 오류 시 빈 배열 설정
+}
+
 
 // 4. 최신 뉴스 조회 (조회된 종목에 대해서만)
 $news_data = [];
@@ -81,16 +114,24 @@ if (!empty($stocks)) {
         ) as latest_news
         WHERE rn = 1
     ";
-    $news_stmt = $pdo->prepare($news_sql);
-    $news_stmt->execute($stock_codes);
-    $news_data_raw = $news_stmt->fetchAll(PDO::FETCH_GROUP);
-    
-    // PDO::FETCH_GROUP은 각 키에 대해 배열을 반환하므로, 첫 번째 항목만 사용하도록 데이터를 재구성합니다.
-    foreach ($news_data_raw as $code => $news_items) {
-        $news_data[$code] = $news_items[0];
+    try {
+        $news_stmt = $pdo->prepare($news_sql);
+        $news_stmt->execute($stock_codes);
+        $news_data_raw = $news_stmt->fetchAll(PDO::FETCH_GROUP);
+        
+        foreach ($news_data_raw as $code => $news_items) {
+            $news_data[$code] = $news_items[0];
+        }
+        write_log("뉴스 데이터 조회 성공. 조회된 뉴스 수: " . count($news_data));
+    } catch (PDOException $e) {
+        write_log("뉴스 데이터 조회 실패: " . $e->getMessage());
+        $news_data = []; // 오류 시 빈 배열 설정
     }
+} else {
+    write_log("조회된 종목이 없어 뉴스 데이터를 조회하지 않습니다.");
 }
 
+write_log("display_all_stocks.php 스크립트 종료");
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -122,83 +163,4 @@ if (!empty($stocks)) {
     <div class="container">
         <h1>코스피/코스닥 전체 종목</h1>
         <p class="subtitle">
-            상승: <span class="positive"><?= $stats['rising_count'] ?? 0 ?></span> / 
-            하락: <span class="negative"><?= $stats['falling_count'] ?? 0 ?></span> / 
-            전체: <?= $total_rows ?>
-        </p>
-        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="실시간 검색: 종목 코드, 종목명 등...">
-        <div id="searchResults" class="search-results"></div>
-
-        <table id="stockTable">
-            <thead>
-                <tr><th>종목코드</th><th>종목명</th><th>시장</th><th>현재가</th><th>등락률</th><th>전일종가</th><th>유통주수</th><th style="width: 250px;">최신뉴스</th></tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($stocks)): ?>
-                    <?php foreach ($stocks as $row): ?>
-                        <?php
-                        $current_price = (float)str_replace([',', '+', '-'], '', $row["current_price"]);
-                        $prev_price = (float)str_replace([',', '+', '-'], '', $row["previous_day_closing_price"]);
-                        $rate_str = 'N/A';
-                        $rate_class = '';
-                        if ($prev_price != 0) {
-                            $rate = (($current_price - $prev_price) / $prev_price) * 100;
-                            $rate_str = number_format($rate, 2) . '%';
-                            if ($rate > 0) $rate_class = 'positive';
-                            if ($rate < 0) $rate_class = 'negative';
-                        }
-                        ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row["stock_code"]) ?></td>
-                            <td><?= htmlspecialchars($row["stock_name"]) ?></td>
-                            <td><?= htmlspecialchars($row["market"]) ?></td>
-                            <td><?= number_format($current_price) ?></td>
-                            <td class="<?= $rate_class ?>"><?= $rate_str ?></td>
-                            <td><?= number_format($prev_price) ?></td>
-                            <td><?= is_numeric($row["circulating_shares"]) ? number_format($row["circulating_shares"]) : 'N/A' ?></td>
-                            <td class="news-title">
-                                <?php if (isset($news_data[$row['stock_code']])): ?>
-                                    <a href="<?= htmlspecialchars($news_data[$row['stock_code']]['link']) ?>" target="_blank"><?= htmlspecialchars($news_data[$row['stock_code']]['title']) ?></a>
-                                <?php else: ?>
-                                    N/A
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="8" style="text-align:center;">표시할 데이터가 없습니다.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-
-        <div class="pagination">
-            <?php for ($i = 1; $i <= $total_pages; $i++):
-                if ($i == $page):
-                    echo "<strong>{$i}</strong>";
-                else:
-                    echo "<a href=\" ?page= ". $i . " \">{$i}</a>";
-                endif;
-            endfor; ?>
-        </div>
-    </div>
-    <a href="index.php" class="home-link">메인</a>
-    <script>
-        function searchTable() {
-            const input = document.getElementById("searchInput");
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById("stockTable");
-            const tr = table.getElementsByTagName("tr");
-            let visibleCount = 0;
-
-            for (let i = 1; i < tr.length; i++) {
-                let found = Array.from(tr[i].getElementsByTagName("td")).some(td => 
-                    td.textContent.toUpperCase().includes(filter)
-                );
-                tr[i].style.display = found ? "" : "none";
-                if (found) visibleCount++;
-            }
-            document.getElementById("searchResults").textContent = filter ? `검색 결과: ${visibleCount}개` : '';
-        }
-    </script>
-</body>
-</html>
+            상승: <span class="positive">
