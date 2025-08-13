@@ -18,7 +18,7 @@ $conn->close();
     <link rel="stylesheet" href="assets/css/top_30_stocks.css">
 </head>
 <body>
-    <a href="index.php" class="home-btn">🏠 메인으로</a>
+    <a href="index.php" class="fixed-home-button">메인</a>
     <div class="header">
         <h1>📈 실시간 상승률 30위</h1>
     </div>

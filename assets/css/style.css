@@ -1,0 +1,18 @@
+/* 메인으로 돌아가기 고정 버튼 */
+.fixed-home-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 1000; /* 다른 요소 위에 표시되도록 z-index 설정 */
+    transition: background-color 0.3s;
+}
+
+.fixed-home-button:hover {
+    background-color: #0056b3;
+}

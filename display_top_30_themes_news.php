@@ -85,6 +85,22 @@
             font-weight: bold;
             text-align: center;
         }
+        .fixed-home-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .fixed-home-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
         .home-link {
             display: block;
             text-align: center;
@@ -192,7 +208,7 @@
 
         $conn->close();
         ?>
-        <a href="index.php" class="home-link">메인으로 돌아가기</a>
+        <a href="index.php" class="fixed-home-button">메인</a>
     </div>
 
     <script>
