@@ -236,6 +236,18 @@ python3 python_modules/theme_classifier.py
 2. 또는 직접 URL: `/MD/top_30_rising_stocks.php`
 3. 업데이트 내역 확인: `/updates.php`
 
+### 🆕 최신 업데이트 (2025-08-13)
+
+### 기술적 분석 데이터 파이프라인 개선 및 웹 뷰어 연동
+- ✅ `get_technical_analysis.py` 스크립트가 성공적으로 실행되어 차트 데이터를 기반으로 기술적 분석을 수행하고 `technical_analysis` 테이블에 데이터를 저장하는 것을 확인했습니다.
+- ✅ `db_viewer.php`를 수정하여 `technical_analysis` 테이블을 기본으로 조회하도록 설정하여 웹 인터페이스를 통한 데이터 확인을 용이하게 했습니다.
+- ✅ `display_all_stocks.php`의 가격 데이터 처리 로직을 개선하고 페이지네이션 링크 생성 방식을 표준화했습니다.
+- ✅ `get_stock_chart_data.py`에 차트 데이터를 데이터베이스에 저장하는 기능을 추가하여 데이터 파이프라인의 안정성을 높였습니다.
+- ✅ `kiwoom_api.py`의 차트 데이터 조회 엔드포인트를 수정하고, 프로젝트 루트 경로를 `sys.path`에 추가하여 모듈 임포트 문제를 해결했습니다.
+
+### Ollama 및 Open-WebUI 삭제
+- ⚠️ 서버 스펙상 불안정하며 실행이 불가하여 `Ollama` 및 `Open-WebUI` 관련 파일과 Docker 이미지를 삭제했습니다.
+
 ## 📝 라이선스
 이 프로젝트는 개인 사용 목적으로 제작되었습니다.
 
