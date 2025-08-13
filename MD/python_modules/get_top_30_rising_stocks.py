@@ -6,7 +6,7 @@ import os
 
 # Load API keys from config.ini
 config = configparser.ConfigParser()
-config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../', 'config.ini')
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.ini')
 config.read(config_path)
 
 APP_KEY = config['API']['APP_KEY']

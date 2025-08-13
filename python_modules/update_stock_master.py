@@ -1,17 +1,23 @@
-import configparser
+import sys
 import os
+
+# Add the project root to the Python path
+project_root_for_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root_for_path)
+
+import configparser
 import datetime
 import logging
 import mysql.connector
 import time
-from kiwoom_api import KiwoomAPI, logger
+from python_modules.kiwoom_api import KiwoomAPI, logger
 
 # --- 기본 경로 및 설정 ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
 CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
 
-from utils.db_utils import get_db_connection
+from python_modules.utils.db_utils import get_db_connection
 
 def get_all_stocks(api, market_type_code, market_name):
     """

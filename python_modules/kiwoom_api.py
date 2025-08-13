@@ -28,7 +28,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from .utils.db_utils import get_db_connection
+from python_modules.utils.db_utils import get_db_connection
 
 class KiwoomAPI:
     def __init__(self):

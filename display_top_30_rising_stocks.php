@@ -6,8 +6,6 @@ require_once 'stock_data_fetcher.php';
 // 데이터베이스에서 상위 30개 상승 종목 데이터를 가져옵니다.
 $stocks = get_top_30_rising_stocks($conn);
 
-// 데이터베이스 연결을 닫습니다.
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="ko">

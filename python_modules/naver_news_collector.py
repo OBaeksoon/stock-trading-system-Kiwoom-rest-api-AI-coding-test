@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # --- 로컬 모듈 임포트 ---
 from utils.db_utils import get_db_connection
 # get_top_30_rising_stocks.py에서 직접 함수를 가져오도록 변경
-from get_top_30_rising_stocks import get_top_30_rising_stocks_data
+from get_top_30_rising_stocks import get_top_30_rising_stocks, get_access_token
 
 # --- 로그 설정 ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -140,8 +140,12 @@ def collect_news(target_stocks='top30'):
     stock_list = []
     if target_stocks == 'top30':
         logger.info("실시간 상승률 상위 30위 종목의 뉴스 수집을 시작합니다.")
+        access_token = get_access_token()
+        if not access_token:
+            logger.error("접근 토큰을 가져오지 못했습니다. 상승률 상위 종목 조회를 건너뜁니다.")
+            return
         # 직접 함수 호출로 변경
-        top_stocks_data = get_top_30_rising_stocks_data()
+        top_stocks_data = get_top_30_rising_stocks(access_token)
         if top_stocks_data:
             stock_list = [{'stock_code': s['stk_cd'], 'stock_name': s['stk_nm']} for s in top_stocks_data]
     elif target_stocks == 'all':
