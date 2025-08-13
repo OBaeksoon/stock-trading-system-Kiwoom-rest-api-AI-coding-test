@@ -30,7 +30,7 @@
         $tables_result = $pdo->query("SHOW TABLES");
         $tables = $tables_result->fetchAll(PDO::FETCH_COLUMN);
         
-        $selected_table = $_GET['table'] ?? $tables[0] ?? '';
+        $selected_table = $_GET['table'] ?? 'technical_analysis';
 
         // 선택된 테이블이 실제 테이블 목록에 있는지 확인 (보안 강화)
         if (!in_array($selected_table, $tables)) {

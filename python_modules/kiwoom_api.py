@@ -5,6 +5,13 @@ import os
 import datetime
 import logging
 import mysql.connector
+import sys
+
+# 프로젝트 루트 경로를 sys.path에 추가
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
+
 
 # --- 기본 경로 설정 ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -195,6 +202,7 @@ class KiwoomAPI:
 
     def get_chart_data(self, stock_code, chart_type):
         """차트 데이터를 조회합니다."""
+        endpoint = "api/dostk/chart"  # 차트 전용 엔드포인트로 수정
         api_map = {'daily': 'ka10081', 'weekly': 'ka10082', 'minute': 'ka10080'}
         data_map = {
             'daily': {"stk_cd": stock_code, "base_dt": datetime.datetime.now().strftime('%Y%m%d'), "upd_stkpc_tp": "1"},
@@ -204,7 +212,7 @@ class KiwoomAPI:
         if chart_type not in api_map:
             logger.error(f"잘못된 차트 종류: {chart_type}")
             return None
-        return self._send_request(api_map[chart_type], data_map[chart_type])
+        return self._execute_request(endpoint, api_map[chart_type], data_map[chart_type])
 
     def get_all_themes(self):
         """전체 테마 정보를 조회합니다. (TR: ka90001)"""

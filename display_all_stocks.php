@@ -33,10 +33,14 @@ try {
 // 1. 전체 종목 통계 계산
 $stats_sql = "
     SELECT 
-        SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) > CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as rising_count,
-        SUM(CASE WHEN CAST(REPLACE(current_price, ',', '') AS DECIMAL(20,2)) < CAST(REPLACE(previous_day_closing_price, ',', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as falling_count
+        SUM(CASE WHEN CAST(REPLACE(REPLACE(REPLACE(current_price, ',', ''), '+', ''), '-', '') AS DECIMAL(20,2)) > CAST(REPLACE(REPLACE(REPLACE(previous_day_closing_price, ',', ''), '+', ''), '-', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as rising_count,
+        SUM(CASE WHEN CAST(REPLACE(REPLACE(REPLACE(current_price, ',', ''), '+', ''), '-', '') AS DECIMAL(20,2)) < CAST(REPLACE(REPLACE(REPLACE(previous_day_closing_price, ',', ''), '+', ''), '-', '') AS DECIMAL(20,2)) THEN 1 ELSE 0 END) as falling_count
     FROM stock_details
-    WHERE previous_day_closing_price IS NOT NULL AND current_price IS NOT NULL";
+    WHERE previous_day_closing_price IS NOT NULL 
+      AND current_price IS NOT NULL
+      AND previous_day_closing_price REGEXP '^[+-]?[0-9,.]+$' 
+      AND current_price REGEXP '^[+-]?[0-9,.]+$'
+";
 $stats = $pdo->query($stats_sql)->fetch();
 
 // 2. 페이징 설정
@@ -61,6 +65,7 @@ $stmt->execute();
 $stocks = $stmt->fetchAll();
 
 // 4. 최신 뉴스 조회 (조회된 종목에 대해서만)
+$news_data = [];
 if (!empty($stocks)) {
     $stock_codes = array_column($stocks, 'stock_code');
     $placeholders = implode(',', array_fill(0, count($stock_codes), '?'));
@@ -81,7 +86,6 @@ if (!empty($stocks)) {
     $news_data_raw = $news_stmt->fetchAll(PDO::FETCH_GROUP);
     
     // PDO::FETCH_GROUP은 각 키에 대해 배열을 반환하므로, 첫 번째 항목만 사용하도록 데이터를 재구성합니다.
-    $news_data = [];
     foreach ($news_data_raw as $code => $news_items) {
         $news_data[$code] = $news_items[0];
     }
@@ -133,8 +137,8 @@ if (!empty($stocks)) {
                 <?php if (!empty($stocks)): ?>
                     <?php foreach ($stocks as $row): ?>
                         <?php
-                        $current_price = (float)str_replace(',', '', $row["current_price"]);
-                        $prev_price = (float)str_replace(',', '', $row["previous_day_closing_price"]);
+                        $current_price = (float)str_replace([',', '+', '-'], '', $row["current_price"]);
+                        $prev_price = (float)str_replace([',', '+', '-'], '', $row["previous_day_closing_price"]);
                         $rate_str = 'N/A';
                         $rate_class = '';
                         if ($prev_price != 0) {
@@ -168,13 +172,13 @@ if (!empty($stocks)) {
         </table>
 
         <div class="pagination">
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <?php if ($i == $page): ?>
-                    <strong><?= $i ?></strong>
-                <?php else: ?>
-                    <a href="?page=<?= $i ?>"><?= $i ?></a>
-                <?php endif; ?>
-            <?php endfor; ?>
+            <?php for ($i = 1; $i <= $total_pages; $i++):
+                if ($i == $page):
+                    echo "<strong>{$i}</strong>";
+                else:
+                    echo "<a href=\" ?page= ". $i . " \">{$i}</a>";
+                endif;
+            endfor; ?>
         </div>
     </div>
     <a href="index.php" class="home-link">메인</a>
