@@ -288,3 +288,8 @@ python3 kiwoom_mcp/main.py
 
 ### Git 커밋 내역
 - `8a5319f` - refactor: restructure python modules and add core trading logic
+
+### 🆕 최신 업데이트 (2025-08-13)
+
+### SuperClaude 명령어 문서 업데이트
+- ✅ `MCP 서버 명령어.md` 파일에 SuperClaude의 모든 명령어와 사용 예제를 상세히 추가했습니다.

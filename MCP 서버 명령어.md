@@ -155,3 +155,18 @@
 - **페르소나:** architect, devops
 - **복잡도:** 높음
 - **사용 예제:** `sc_workflow --args "deploy-to-staging" --flags "--stages 'build,test,deploy'"` ('build, test, deploy' 단계를 포함하는 '스테이징 배포' 워크플로우 실행)
+
+
+docker run -d -p 3000:8080 -v ollama:/root/.ollama -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
+
+sc_optimize --mode "adaptive" sc_improve --args "@display_top_30_rising_stocks.php" --flags "--refactor --optimize" 
+
+sc_optimize --mode "adaptive" sc_improve --args "@display_top_30_rising_stocks.php" --flags "--refactor --optimize" sc_troubleshoot --args "뉴스 업데이트 시작 버튼을 클릭하면 업데이트 중 오류가 발생했습니다. 라는 오류가 나와" --flags "--logs --fix"  
+
+sc_git --args "commit -m 'feat: add user login'" --flags "--checkpoint"
+
+sc_spawn --args "code-review" --flags "--role 'security'" sc_task --args "create 'Setup production environment'" --flags "--milestone 'v1.0'"
+
+sc_spawn --args "code-review" --flags "--role 'security'" sc_task --args "create 'Setup production environment'" --flags "--milestone 'v1.0'"
+
+sc_troubleshoot --args "index.php에 연결된 각 메뉴의 파일에 에대해 문제점을 찾고 해결, 로그가 없다면 각 파일에 로그을 출력 하는 기능을 추가 하고 진행" --flags "--logs --fix"
