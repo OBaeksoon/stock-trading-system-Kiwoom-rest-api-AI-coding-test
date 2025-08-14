@@ -61,7 +61,7 @@ def get_all_stocks_list_by_market(token, base_url, market_type):
             response = requests.post(url, headers=headers, json=params)
             response.raise_for_status() 
 
-            res_json = response.json()
+            res_json = response.json() 
             
             # API 응답 전체를 로그 파일에 기록 (자세한 디버깅용)
             logger.debug(f"Raw API 응답 for {market_name} (Page cont-yn={cont_yn}, next-key={next_key}): {json.dumps(res_json, indent=4, ensure_ascii=False)}")
@@ -108,7 +108,7 @@ def get_all_stocks_list_by_market(token, base_url, market_type):
 
 if __name__ == '__main__':
     logger.info("--- 코스피/코스닥 전종목 정보 업데이트 시작 ---")
-    kiwoom_api.initialize_db() # DB 초기화 확인
+    # kiwoom_api.initialize_db() # DB 초기화 확인
 
     # 필수 API 설정 로드 여부 확인
     if not all([APP_KEY, APP_SECRET, BASE_URL]):
