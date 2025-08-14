@@ -21,10 +21,12 @@ $debug_info = '';
 $update_requested = isset($_GET['update']) && $_GET['update'] == '1';
 
 function execute_python_script($command, & $output, & $return_var, $log_prefix = "") {
-    write_log("{$log_prefix}Python 스크립트 실행 명령: " . $command);
-    exec($command, $output, $return_var);
+    $venv_python = __DIR__ . '/.venv/bin/python';
+    $full_command = $venv_python . ' ' . $command . ' 2>&1';
+    write_log("{$log_prefix}Python 스크립트 실행 명령: " . $full_command);
+    exec($full_command, $output, $return_var);
     write_log("{$log_prefix}Python 스크립트 종료 코드: " . $return_var);
-    write_log("{$log_prefix}Python 스크립트 STDOUT: " . implode("\n", $output));
+    write_log("{$log_prefix}Python 스크립트 STDOUT/STDERR: " . implode("\n", $output));
     
     // UTF-8 인코딩 시도
     foreach ($output as & $line) {

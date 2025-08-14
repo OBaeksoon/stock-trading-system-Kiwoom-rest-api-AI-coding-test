@@ -34,6 +34,8 @@
 - **복잡도:** 높음
 - **사용 예제:** `sc_design --args "user-authentication-service" --flags "--architecture --api"` (사용자 인증 서비스의 아키텍처 및 API 설계)
 
+sc_design --args "프로젝트 진행 상황 보고" --flags "프로젝트 진행 순서에 따라 진행"
+
 ---
 
 ### **sc_document**
@@ -170,3 +172,6 @@ sc_spawn --args "code-review" --flags "--role 'security'" sc_task --args "create
 sc_spawn --args "code-review" --flags "--role 'security'" sc_task --args "create 'Setup production environment'" --flags "--milestone 'v1.0'"
 
 sc_troubleshoot --args "index.php에 연결된 각 메뉴의 파일에 에대해 문제점을 찾고 해결, 로그가 없다면 각 파일에 로그을 출력 하는 기능을 추가 하고 진행" --flags "--logs --fix"
+
+sc_troubleshoot --args "시가총액 상위 10위 주식
+Fatal error: Uncaught mysqli_sql_exception: Table 'stock.us_top_market_cap_stocks' doesn't exist in /home/stock/public_html/display_us_stocks.php:139 Stack trace: #0 /home/stock/public_html/display_us_stocks.php(139): mysqli->query() #1 {main} thrown in /home/stock/public_html/display_us_stocks.php on line 139" --flags "--logs --fix"

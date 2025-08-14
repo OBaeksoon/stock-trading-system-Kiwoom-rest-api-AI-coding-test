@@ -163,4 +163,102 @@ write_log("display_all_stocks.php 스크립트 종료");
     <div class="container">
         <h1>코스피/코스닥 전체 종목</h1>
         <p class="subtitle">
-            상승: <span class="positive">
+            상승: <span class="positive"><?php echo number_format($stats['rising_count'] ?? 0); ?></span> | 
+            하락: <span class="negative"><?php echo number_format($stats['falling_count'] ?? 0); ?></span>
+        </p>
+        
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="종목명 또는 코드로 검색...">
+
+        <div style="overflow-x:auto;">
+            <table id="stocksTable">
+                <thead>
+                    <tr>
+                        <th>종목코드</th>
+                        <th>종목명</th>
+                        <th>시장</th>
+                        <th>현재가</th>
+                        <th>전일비</th>
+                        <th>등락률</th>
+                        <th>유통주식수</th>
+                        <th>최신 뉴스</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($stocks)): ?>
+                        <?php foreach ($stocks as $stock): ?>
+                            <?php
+                                // 데이터 클리닝 및 숫자 변환
+                                $current_price_val = is_numeric(str_replace(',', '', $stock['current_price'])) ? (float)str_replace(',', '', $stock['current_price']) : 0;
+                                $prev_price_val = is_numeric(str_replace(',', '', $stock['previous_day_closing_price'])) ? (float)str_replace(',', '', $stock['previous_day_closing_price']) : 0;
+                                
+                                $change = $current_price_val - $prev_price_val;
+                                $change_rate = ($prev_price_val != 0) ? ($change / $prev_price_val) * 100 : 0;
+                                
+                                $change_class = $change > 0 ? 'positive' : ($change < 0 ? 'negative' : '');
+                                $change_symbol = $change > 0 ? '▲' : ($change < 0 ? '▼' : '');
+                            ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($stock['stock_code']); ?></td>
+                                <td><?php echo htmlspecialchars($stock['stock_name']); ?></td>
+                                <td><?php echo htmlspecialchars($stock['market']); ?></td>
+                                <td class="<?php echo $change_class; ?>"><?php echo htmlspecialchars($stock['current_price']); ?></td>
+                                <td class="<?php echo $change_class; ?>"><?php echo $change_symbol . ' ' . number_format(abs($change)); ?></td>
+                                <td class="<?php echo $change_class; ?>"><?php echo number_format($change_rate, 2); ?>%</td>
+                                <td><?php echo number_format($stock['circulating_shares']); ?></td>
+                                <td class="news-title">
+                                    <?php if (isset($news_data[$stock['stock_code']])): ?>
+                                        <a href="<?php echo htmlspecialchars($news_data[$stock['stock_code']]['link']); ?>" target="_blank">
+                                            <?php echo htmlspecialchars($news_data[$stock['stock_code']]['title']); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="8" style="text-align:center;">표시할 데이터가 없습니다.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <?php if ($total_pages > 1): ?>
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                    <?php if ($i == $page): ?>
+                        <strong><?php echo $i; ?></strong>
+                    <?php else: ?>
+                        <a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <a href="index.php" class="home-link">메인</a>
+
+    <script>
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("stocksTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) { // 1부터 시작하여 aheade 건너뛰기
+            let td1 = tr[i].getElementsByTagName("td")[0]; // 종목코드
+            let td2 = tr[i].getElementsByTagName("td")[1]; // 종목명
+            if (td1 || td2) {
+                if (td1.textContent.toUpperCase().indexOf(filter) > -1 || td2.textContent.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }       
+        }
+    }
+    </script>
+</body>
+</html>

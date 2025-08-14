@@ -32,7 +32,9 @@ $chart_type = $_GET['chart_type'];
 write_log("요청 파라미터: stock_code=" . $stock_code . ", chart_type=" . $chart_type);
 
 // Python 스크립트 실행 명령어
-$command = "python3 " . escapeshellcmd(__DIR__ . '/python_modules/get_stock_chart_data.py') . " " . escapeshellarg($stock_code) . " " . escapeshellarg($chart_type);
+$venv_python = escapeshellcmd(__DIR__ . '/.venv/bin/python');
+$script_path = escapeshellcmd(__DIR__ . '/python_modules/get_stock_chart_data.py');
+$command = $venv_python . " " . $script_path . " " . escapeshellarg($stock_code) . " " . escapeshellarg($chart_type);
 write_log("Python 스크립트 실행 명령: " . $command);
 
 // proc_open을 사용하여 stdout과 stderr를 분리
