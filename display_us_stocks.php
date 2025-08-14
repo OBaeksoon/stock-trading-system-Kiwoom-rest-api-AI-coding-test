@@ -132,6 +132,34 @@
             echo "<p class='error'>주요 지수 데이터를 가져오는 중 오류가 발생했습니다.</p>";
         }
 
+        // --- 시가총액 상위 10위 주식 ---
+        write_log("시가총액 상위 10위 주식 조회 시작.");
+        echo "<h2>시가총액 상위 10위 주식</h2>";
+        $sql_market_cap = "SELECT ticker, company_name, market_cap FROM us_top_market_cap_stocks ORDER BY market_cap DESC LIMIT 10";
+        $result_market_cap = $conn->query($sql_market_cap);
+
+        if ($result_market_cap) {
+            if ($result_market_cap->num_rows > 0) {
+                write_log("시가총액 상위 10위 주식 조회 성공. 총 " . $result_market_cap->num_rows . "개 종목 발견.");
+                echo "<table><thead><tr><th>티커</th><th>종목명</th><th>시가총액</th></tr></thead><tbody>";
+                while($row = $result_market_cap->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row["ticker"]) . "</td>";
+                    echo "<td>" . htmlspecialchars($row["company_name"]) . "</td>";
+                    echo "<td>" . number_format($row["market_cap"]) . "</td>";
+                    echo "</tr>";
+                }
+                echo "</tbody></table>";
+            } else {
+                write_log("시가총액 상위 10위 주식 데이터 없음.");
+                echo "<p class='no-data'>시가총액 상위 10위 주식 데이터를 찾을 수 없습니다. 'python_modules/get_us_top_30_stocks.py'를 실행해주세요.</p>";
+            }
+        } else {
+            write_log("시가총액 상위 10위 주식 쿼리 실패: " . $conn->error);
+            echo "<p class='error'>시가총액 상위 10위 주식 데이터를 가져오는 중 오류가 발생했습니다.</p>";
+        }
+
+
         // --- 상승률 상위 주식 및 연관 국내 테마 ---
         write_log("상승률 상위 주식 및 연관 국내 테마 조회 시작.");
         echo "<h2>상승률 상위 주식 및 연관 국내 테마</h2>";
@@ -198,9 +226,6 @@
                 write_log("상승률 상위 주식 데이터 없음.");
                 echo "<p class='no-data'>상승률 상위 주식 데이터를 찾을 수 없습니다. 'python_modules/get_us_top_30_stocks.py'를 실행해주세요.</p>";
             }
-        } else {
-            write_log("상승률 상위 주식 쿼리 실패: " . $conn->error);
-            echo "<p class='error'>상승률 상위 주식 데이터를 가져오는 중 오류가 발생했습니다.</p>";
         }
 
         $conn->close();

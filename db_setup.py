@@ -123,7 +123,7 @@ def setup_database():
             CREATE TABLE IF NOT EXISTS us_indices (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
-                ticker VARCHAR(20) NOT NULL,
+                ticker VARCHAR(20) NOT NULL UNIQUE,
                 last_price DECIMAL(12, 2),
                 change_val DECIMAL(12, 2),
                 percent_change DECIMAL(8, 2),
@@ -137,13 +137,12 @@ def setup_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS us_top_stocks (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                ticker VARCHAR(20) NOT NULL,
+                ticker VARCHAR(20) NOT NULL UNIQUE,
                 company_name VARCHAR(255),
                 last_price DECIMAL(12, 2),
                 change_val DECIMAL(12, 2),
                 percent_change DECIMAL(8, 2),
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_ticker (ticker)
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         """)
         # theme 컬럼이 존재하지 않으면 추가합니다.
@@ -152,6 +151,19 @@ def setup_database():
             ADD COLUMN IF NOT EXISTS theme VARCHAR(255)
         """)
         logger.info("`us_top_stocks` 테이블 준비 완료.")
+
+        # 5. `us_top_market_cap_stocks` 테이블 생성
+        logger.info("`us_top_market_cap_stocks` 테이블을 생성합니다...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS us_top_market_cap_stocks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ticker VARCHAR(20) NOT NULL UNIQUE,
+                company_name VARCHAR(255),
+                market_cap BIGINT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        """)
+        logger.info("`us_top_market_cap_stocks` 테이블 생성 완료.")
 
         logger.info("`top_30_rising_stocks` 테이블을 생성합니다...")
         cursor.execute("""
@@ -183,26 +195,28 @@ def clear_stock_data():
         return
 
     cursor = conn.cursor()
-    tables_to_clear = ['all_stocks', 'stock_details', 'stock_news']
+    tables_to_clear = ['all_stocks', 'stock_details', 'stock_news', 'us_indices', 'us_top_stocks', 'us_top_market_cap_stocks', 'top_30_rising_stocks'] # 추가된 테이블 포함
     
     try:
         logger.info("기존 주식 데이터 삭제를 시작합니다...")
         for table in tables_to_clear:
             logger.info(f"`{table}` 테이블의 데이터를 삭제합니다...")
-            cursor.execute(f"TRUNCATE TABLE {table}")
-            logger.info(f"`{table}` 테이블 데이터 삭제 완료.")
+            try:
+                cursor.execute(f"TRUNCATE TABLE {table}")
+                logger.info(f"`{table}` 테이블 데이터 삭제 완료.")
+            except mysql.connector.Error as err:
+                # 1051은 테이블이 존재하지 않을 때 발생하는 에러 코드입니다.
+                if err.errno == 1051:
+                    logger.warning(f"테이블 `{table}`이(가) 존재하지 않아 건너뜁니다.")
+                else:
+                    raise # 다른 오류는 다시 발생시킴
         
         conn.commit()
         logger.info("모든 주식 관련 데이터가 성공적으로 삭제되었습니다.")
 
     except mysql.connector.Error as err:
         logger.error(f"데이터 삭제 중 오류 발생: {err}")
-        # 1051은 테이블이 존재하지 않을 때 발생하는 에러 코드입니다.
-        if 'Unknown table' in err.msg or err.errno == 1051:
-             table_name = err.msg.split("'")[1]
-             logger.warning(f"테이블 '{table_name}'이(가) 존재하지 않아 건너뜁니다.")
-        else:
-            conn.rollback()
+        conn.rollback()
     finally:
         cursor.close()
         conn.close()

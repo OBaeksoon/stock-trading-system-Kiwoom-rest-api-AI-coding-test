@@ -139,7 +139,7 @@ def get_top_10_market_cap_stocks():
     """
     logger.info("시가총액 상위 10개 종목 조회 시작.")
     try:
-        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+        url = 'https://en.wikipedia.org/wiki/List_of_S%26P%20500_companies'
         sp500_df = pd.read_html(url)[0]
         tickers = sp500_df['Symbol'].tolist()
         logger.info(f"S&P 500 목록에서 {len(tickers)}개 티커를 가져와 시가총액 조회.")
@@ -206,6 +206,33 @@ def save_data_to_db(indices_data, top_stocks_data):
         cursor.close()
         conn.close()
 
+def save_top_market_cap_stocks_to_db(market_cap_data):
+    """시가총액 상위 종목 데이터를 데이터베이스에 저장합니다."""
+    conn = get_db_connection()
+    if not conn:
+        logger.error("DB 연결을 가져올 수 없습니다. 시가총액 데이터 저장을 건너뜁니다.")
+        return
+
+    cursor = conn.cursor()
+    try:
+        logger.info("Updating US top market cap stocks...")
+        cursor.execute("TRUNCATE TABLE us_top_market_cap_stocks")
+        sql = "INSERT INTO us_top_market_cap_stocks (ticker, company_name, market_cap) VALUES (%s, %s, %s)"
+        
+        # 데이터를 튜플 리스트로 변환
+        data_to_insert = [(d['ticker'], d['company_name'], d['market_cap']) for d in market_cap_data]
+        
+        cursor.executemany(sql, data_to_insert)
+        conn.commit()
+        logger.info(f"{cursor.rowcount} rows inserted into us_top_market_cap_stocks.")
+    except mysql.connector.Error as err:
+        logger.error(f"Database error during market cap save: {err}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def main():
     logger.info("Fetching US stock data...")
     
@@ -215,6 +242,7 @@ def main():
         logger.info("\n--- 시가총액 상위 10개 종목 ---")
         for i, stock in enumerate(top_10_market_cap):
             logger.info(f"{i+1}. {stock['company_name']} ({stock['ticker']}): 시가총액 {stock['market_cap']:,}")
+        save_top_market_cap_stocks_to_db(top_10_market_cap) # DB에 저장
     else:
         logger.warning("시가총액 상위 10개 종목을 가져오지 못했습니다.")
 
