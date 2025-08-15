@@ -99,6 +99,30 @@
             'Real Estate' => [], 'Utilities' => ['조선 & 전력 인프라'], 'Consumer Defensive' => []
         ];
 
+    
+        // --- 주요 지수 ---
+        write_log("주요 지수 조회 시작.");
+        echo "<h2>주요 지수</h2>";
+        $sql_indices = "SELECT name, last_price, change_val, percent_change, updated_at FROM us_indices ORDER BY id";
+        $result_indices = $conn->query($sql_indices);
+        if ($result_indices) {
+            if ($result_indices->num_rows > 0) {
+                write_log("주요 지수 조회 성공. 총 " . $result_indices->num_rows . "개 지수 발견.");
+                echo "<table><thead><tr><th>지수명</th><th>현재가</th><th>등락</th><th>등락률</th><th>업데이트</th></tr></thead><tbody>";
+                while($row = $result_indices->fetch_assoc()) {
+                    $rate_class = $row["percent_change"] >= 0 ? 'positive' : 'negative';
+                    echo "<tr><td>" . htmlspecialchars($row["name"]) . "</td><td>" . number_format($row["last_price"], 2) . "</td><td class='" . $rate_class . "'>" . number_format($row["change_val"], 2) . "</td><td class='" . $rate_class . "'>" . number_format($row["percent_change"], 2) . "%</td><td>" . htmlspecialchars($row["updated_at"]) . "</td></tr>";
+                }
+                echo "</tbody></table>";
+            } else {
+                write_log("주요 지수 데이터 없음.");
+                echo "<p class='no-data'>주요 지수 데이터를 찾을 수 없습니다.</p>";
+            }
+        } else {
+            write_log("주요 지수 쿼리 실패: " . $conn->error);
+            echo "<p class='error'>주요 지수 데이터를 가져오는 중 오류가 발생했습니다.</p>";
+        }
+
         // --- 시가총액 상위 10위 주식 ---
         echo "<h2>시가총액 상위 10위 주식</h2>";
         if (!empty($data['top_market_cap'])) {
