@@ -1,4 +1,4 @@
-<?php
+/ㅡㅇ<?php
 session_start();
 
 // Database connection settings from config.ini

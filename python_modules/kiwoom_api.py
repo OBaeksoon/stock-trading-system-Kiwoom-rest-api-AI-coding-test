@@ -216,11 +216,11 @@ class KiwoomAPI:
 
     def get_all_themes(self):
         """전체 테마 정보를 조회합니다. (TR: ka90001)"""
-        return self._send_request('ka90001', {"qry_tp": "0", "stk_cd": "", "date_tp": "10", "thema_nm": "", "flu_pl_amt_tp": "1", "stex_tp": "1"})
+        return self._execute_request('api/dostk/thema', 'ka90001', {"qry_tp": "0", "stk_cd": "", "date_tp": "10", "thema_nm": "", "flu_pl_amt_tp": "1", "stex_tp": "1"})
 
     def get_stocks_by_theme(self, theme_code):
         """특정 테마의 구성종목을 가져옵니다. (TR: ka90002)"""
-        return self._send_request('ka90002', {"date_tp": "2", "thema_grp_cd": theme_code, "stex_tp": "1"})
+        return self._execute_request('api/dostk/thema', 'ka90002', {"date_tp": "2", "thema_grp_cd": theme_code, "stex_tp": "1"})
 
 # --- 메인 실행 블록 (테스트용) ---
 if __name__ == "__main__":

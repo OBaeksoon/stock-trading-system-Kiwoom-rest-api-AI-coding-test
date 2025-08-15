@@ -1,6 +1,8 @@
 import os
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
+from bs4 import BeautifulSoup
 
 # --- 로컬 모듈 임포트 ---
 from utils.db_utils import get_db_connection
@@ -30,37 +32,50 @@ class ThemeEngine:
         self.api = KiwoomAPI()
         self.themes_keywords = self._initialize_keywords()
 
-    def _initialize_keywords(self):
-        """API를 통해 최신 테마와 종목명을 가져와 키워드를 구성합니다."""
-        if not self.api.token:
-            logger.warning("API 토큰이 없어 기본 테마 키워드만 사용합니다.")
-            return DEFAULT_THEMES_KEYWORDS
+    def _get_themes_from_judal(self):
+        """주달 웹사이트에서 테마 정보를 스크래핑합니다."""
+        url = "https://www.judal.co.kr/"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        themes_data = {}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
 
-        logger.info("키움증권 API에서 전체 테마 목록을 조회합니다.")
-        themes_response = self.api.get_all_themes()
-        if not themes_response or 'thema_grp' not in themes_response:
-            logger.warning("API에서 테마 목록을 가져오지 못했습니다. 기본 키워드를 사용합니다.")
-            return DEFAULT_THEMES_KEYWORDS
+            # 주달 웹사이트의 테마 섹션 찾기 (예시: 실제 HTML 구조에 따라 변경 필요)
+            # 웹페이지 내용을 기반으로 추측: '테마 보기' 또는 '테마별 종목'과 관련된 링크나 섹션
+            # 예를 들어, <div class="theme_list"> 또는 <ul class="theme_category">
+            
+            # 임시로, 'a' 태그 중 'href' 속성에 'theme'이 포함된 것을 찾습니다.
+            theme_links = soup.find_all('a', href=lambda href: href and 'theme' in href)
+            for link in theme_links:
+                theme_name = link.get_text(strip=True)
+                if theme_name and len(theme_name) > 1: # 너무 짧은 텍스트는 제외
+                    # 테마명만 추출하고, 종목은 나중에 추가하거나,
+                    # 테마 상세 페이지로 이동하여 종목을 추출해야 할 수 있습니다.
+                    themes_data[theme_name] = {theme_name: 3} # 테마명 자체를 키워드로 높은 가중치 부여
+                    logger.info(f"스크래핑된 테마: {theme_name}")
+            
+            if not themes_data:
+                logger.warning("주달에서 테마 섹션을 찾을 수 없습니다. 다른 셀렉터를 시도하거나 수동 확인이 필요합니다.")
 
-        # API에서 가져온 테마:종목 리스트를 가중치 있는 키워드로 변환
-        api_keywords = {}
-        for theme_info in themes_response['thema_grp']:
-            theme_name = theme_info.get('thema_nm')
-            theme_code = theme_info.get('thema_grp_cd')
-            if theme_name and theme_code:
-                logger.info(f"테마 '{theme_name}'의 소속 종목을 조회합니다.")
-                stocks_response = self.api.get_stocks_by_theme(theme_code)
-                if stocks_response and 'thema_comp_stk' in stocks_response:
-                    # 테마명은 높은 가중치, 소속 종목명은 낮은 가중치 부여
-                    keywords = {theme_name: 3}
-                    for s in stocks_response['thema_comp_stk']:
-                        if s.get('stk_nm'):
-                            keywords[s.get('stk_nm')] = 1
-                    api_keywords[theme_name] = keywords
+        except requests.exceptions.RequestException as e:
+            logger.error(f"주달 웹 스크래핑 중 오류 발생: {e}")
+        except Exception as e:
+            logger.error(f"주달 HTML 파싱 중 오류 발생: {e}")
         
-        logger.info(f"API에서 {len(api_keywords)}개의 테마와 관련 키워드를 구성했습니다.")
-        # 기본 키워드와 API 키워드를 합치되, API 정보를 우선으로 함
-        return {**DEFAULT_THEMES_KEYWORDS, **api_keywords}
+        return themes_data if themes_data else DEFAULT_THEMES_KEYWORDS
+
+    def _initialize_keywords(self):
+        """API 또는 웹 스크래핑을 통해 최신 테마와 종목명을 가져와 키워드를 구성합니다."""
+        logger.info("주달 웹 스크래핑을 통해 테마 목록을 조회합니다.")
+        judal_themes = self._get_themes_from_judal()
+        if judal_themes and judal_themes != DEFAULT_THEMES_KEYWORDS:
+            logger.info(f"주달에서 {len(judal_themes)}개의 테마와 관련 키워드를 구성했습니다.")
+            return judal_themes
+        else:
+            logger.warning("주달에서 테마 목록을 가져오지 못했습니다. 기본 테마 키워드만 사용합니다.")
+            return DEFAULT_THEMES_KEYWORDS
 
     def classify_news_item(self, news_item):
         """가중치와 부정 키워드를 고려하여 단일 뉴스 아이템의 테마를 분류합니다."""
@@ -117,7 +132,7 @@ class ThemeEngine:
                         cursor.execute(update_query, (theme, news_id))
                         update_count += 1
                 
-                if update_count > 0:
+                if update_count > 0: 
                     conn.commit()
                     logger.info(f"총 {update_count}개의 뉴스 테마를 성공적으로 업데이트했습니다.")
                 else:
