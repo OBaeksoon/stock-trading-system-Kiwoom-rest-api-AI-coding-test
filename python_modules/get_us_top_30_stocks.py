@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import warnings
 import requests
+import os
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 import logging
@@ -10,6 +11,9 @@ import logging
 # --- 로그 설정 ---
 # 웹페이지에서 호출될 때는 파일에 로깅하는 것이 디버깅에 유리합니다.
 log_file_path = os.path.join(os.path.dirname(__file__), '..', 'logs', 'get_us_top_30_stocks.log')
+# 로그 디렉토리가 없으면 생성
+os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -186,6 +190,4 @@ def main():
     logger.info("미국 주식 데이터 조회를 완료하고 결과를 출력했습니다.")
 
 if __name__ == "__main__":
-    # 웹페이지에서 직접 호출될 것을 대비하여, 불필요한 os, configparser 등의 모듈 임포트 제거
-    import os
     main()
