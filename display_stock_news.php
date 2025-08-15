@@ -1,26 +1,7 @@
 <?php
 session_start(); // 세션 시작
 
-// 데이터베이스 연결 설정
-$config_file = __DIR__ . '/config.ini';
-
-if (!file_exists($config_file)) {
-    die("Error: config.ini file not found at " . $config_file);
-}
-
-$config = parse_ini_file($config_file, true);
-
-$db_host = $config['DB']['HOST'];
-$db_user = $config['DB']['USER'];
-$db_password = $config['DB']['PASSWORD'];
-$db_name = $config['DB']['DATABASE'];
-$db_port = $config['DB']['PORT'];
-
-$conn = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once 'db_connection.php';
 
 // 검색어 처리 로직 수정
 $search_query = '';
@@ -38,7 +19,8 @@ $news_list = [];
 
 // 검색어가 있을 경우에만 DB 조회
 if (!empty($search_query)) {
-    $search_term = "%" . $conn->real_escape_string($search_query) . "%";
+    $pdo = get_db_connection();
+    $search_term = "%" . $search_query . "%";
     
     $sql = "SELECT sn.stock_code, sd.stock_name, sn.title, sn.link, sn.description, sn.pub_date 
             FROM stock_news sn
@@ -46,19 +28,10 @@ if (!empty($search_query)) {
             WHERE sd.stock_name LIKE ? OR sn.stock_code LIKE ?
             ORDER BY sn.pub_date DESC LIMIT 100";
     
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $search_term, $search_term);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $news_list[] = $row;
-        }
-    }
-    $stmt->close();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$search_term, $search_term]);
+    $news_list = $stmt->fetchAll();
 }
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="ko">

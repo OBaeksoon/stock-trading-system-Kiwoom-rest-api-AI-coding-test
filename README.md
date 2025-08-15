@@ -42,26 +42,25 @@
 - **kiwoom_api.py** - 키움증권 REST API 클라이언트
 
 #### 데이터 수집
-- **get_all_stocks_to_db.py** - 전체 종목 정보 DB 저장
-- **get_stock_details_to_db.py** - 종목 상세 정보 수집
+- **update_stock_master.py** - 전체 종목 정보 DB 저장 및 업데이트
 - **get_stock_chart_data.py** - 실시간 차트 데이터 조회 (API 직접 호출)
 - **get_stock_code_by_name.py** - 종목명으로 코드 조회
 - **get_technical_analysis.py** - 기술적 지표 분석
 
-#### 실시간 상승률 분석 (NEW!)
+#### 실시간 상승률 분석
 - **get_top_30_rising_stocks.py** - 실시간 상승률 30위 종목 조회 및 DB 저장
-- **get_top_30_themes_news.py** - 상위 종목 관련 뉴스 수집 및 테마 분류
 
-#### 뉴스 분석
+#### 뉴스 및 테마 분석
 - **naver_news_collector.py** - 네이버 뉴스 수집
-- **classify_news.py** - 뉴스 분류 기능
-- **theme_classifier.py** - 테마별 뉴스 분류 (키움 API 연동)
+- **theme_engine.py** - 테마 분류 및 관련 뉴스 처리
+
+#### 자동매매 로직
+- **auto_trader.py** - 자동매매 시스템 핵심 로직
+- **trading_strategy.py** - 다양한 매매 전략 구현
 
 #### 데이터베이스 관리
 - **add_theme_column.py** - 테마 컬럼 추가 스크립트
-
-### 🤖 AI Hedge Fund (ai_hedge_fund/)
-AI 기반 주식 분석 및 자동매매 시스템 모듈
+- **utils/db_utils.py** - 데이터베이스 유틸리티 함수
 
 ### 🏗️ 키움 MCP 모듈 (kiwoom_mcp/)
 키움증권 API를 위한 MCP(Model Context Protocol) 구현
@@ -237,6 +236,18 @@ python3 python_modules/theme_classifier.py
 2. 또는 직접 URL: `/MD/top_30_rising_stocks.php`
 3. 업데이트 내역 확인: `/updates.php`
 
+### 🆕 최신 업데이트 (2025-08-13)
+
+### 기술적 분석 데이터 파이프라인 개선 및 웹 뷰어 연동
+- ✅ `get_technical_analysis.py` 스크립트가 성공적으로 실행되어 차트 데이터를 기반으로 기술적 분석을 수행하고 `technical_analysis` 테이블에 데이터를 저장하는 것을 확인했습니다.
+- ✅ `db_viewer.php`를 수정하여 `technical_analysis` 테이블을 기본으로 조회하도록 설정하여 웹 인터페이스를 통한 데이터 확인을 용이하게 했습니다.
+- ✅ `display_all_stocks.php`의 가격 데이터 처리 로직을 개선하고 페이지네이션 링크 생성 방식을 표준화했습니다.
+- ✅ `get_stock_chart_data.py`에 차트 데이터를 데이터베이스에 저장하는 기능을 추가하여 데이터 파이프라인의 안정성을 높였습니다.
+- ✅ `kiwoom_api.py`의 차트 데이터 조회 엔드포인트를 수정하고, 프로젝트 루트 경로를 `sys.path`에 추가하여 모듈 임포트 문제를 해결했습니다.
+
+### Ollama 및 Open-WebUI 삭제
+- ⚠️ 서버 스펙상 불안정하며 실행이 불가하여 `Ollama` 및 `Open-WebUI` 관련 파일과 Docker 이미지를 삭제했습니다.
+
 ## 📝 라이선스
 이 프로젝트는 개인 사용 목적으로 제작되었습니다.
 
@@ -265,3 +276,20 @@ python3 kiwoom_mcp/main.py
 서버 모드로 실행 시, 다음과 같은 내장 도구를 통해 API 기능을 직접 테스트할 수 있습니다.
 - **인증**: `get_access_token`, `check_token_status` 등
 - **주문**: `stock_buy_order`, `stock_sell_order` 등
+
+### 🆕 최신 업데이트 (2025-08-11)
+
+### Python 모듈 구조 리팩토링 및 핵심 트레이딩 로직 추가
+- ✅ `python_modules` 디렉토리 내 모듈들을 기능별로 재구성하여 가독성 및 유지보수성 향상.
+- ✅ `auto_trader.py` 및 `trading_strategy.py`를 추가하여 자동매매 시스템의 핵심 로직 구현.
+- ✅ 불필요한 `ai_hedge_fund` 디렉토리 및 관련 모듈 삭제.
+- ✅ `get_all_stocks_to_db.py`를 `update_stock_master.py`로 이름 변경 및 기능 개선.
+- ✅ `utils/db_utils.py`를 추가하여 데이터베이스 관련 유틸리티 함수 중앙화.
+
+### Git 커밋 내역
+- `8a5319f` - refactor: restructure python modules and add core trading logic
+
+### 🆕 최신 업데이트 (2025-08-13)
+
+### SuperClaude 명령어 문서 업데이트
+- ✅ `MCP 서버 명령어.md` 파일에 SuperClaude의 모든 명령어와 사용 예제를 상세히 추가했습니다.

@@ -12,6 +12,8 @@ venv/
 
 # Kiwoom API configuration (contains sensitive info)
 config.ini
+auto_trade_backend/config.ini
+.env
 
 # pyheroapi library (if installed as a dependency)
 pyheroapi/

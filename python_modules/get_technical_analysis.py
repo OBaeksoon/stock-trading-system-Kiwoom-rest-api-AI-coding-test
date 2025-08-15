@@ -11,7 +11,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(PROJECT_ROOT)
 
 # kiwoom_api 모듈 임포트
-from python_modules.kiwoom_api import get_db_connection
+from python_modules.utils.db_utils import get_db_connection
 
 def save_technical_analysis_to_db(stock_code, analysis_data):
     """

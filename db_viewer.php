@@ -23,38 +23,19 @@
         <h1>데이터베이스 뷰어</h1>
         
         <?php
-        $config_file = __DIR__ . '/config.ini';
-        
-        if (!file_exists($config_file)) {
-            die("<p class='error'>config.ini 파일을 찾을 수 없습니다.</p>");
-        }
-        
-        $config = parse_ini_file($config_file, true);
-        
-        if (!$config || !isset($config['DB'])) {
-            die("<p class='error'>config.ini 파일에 [DB] 섹션이 없습니다.</p>");
-        }
-        
-        $conn = new mysqli(
-            $config['DB']['HOST'],
-            $config['DB']['USER'],
-            $config['DB']['PASSWORD'],
-            $config['DB']['DATABASE'],
-            $config['DB']['PORT']
-        );
-        
-        if ($conn->connect_error) {
-            die("<p class='error'>데이터베이스 연결 실패: " . $conn->connect_error . "</p>");
-        }
+        require_once 'db_connection.php';
+        $pdo = get_db_connection();
         
         // 테이블 목록 조회
-        $tables_result = $conn->query("SHOW TABLES");
-        $tables = [];
-        while ($row = $tables_result->fetch_array()) {
-            $tables[] = $row[0];
-        }
+        $tables_result = $pdo->query("SHOW TABLES");
+        $tables = $tables_result->fetchAll(PDO::FETCH_COLUMN);
         
-        $selected_table = $_GET['table'] ?? $tables[0] ?? '';
+        $selected_table = $_GET['table'] ?? 'technical_analysis';
+
+        // 선택된 테이블이 실제 테이블 목록에 있는지 확인 (보안 강화)
+        if (!in_array($selected_table, $tables)) {
+            $selected_table = $tables[0] ?? '';
+        }
         ?>
         
         <div class="table-selector">
@@ -73,15 +54,12 @@
         <?php if ($selected_table): ?>
             <?php
             // 테이블 정보 조회
-            $count_result = $conn->query("SELECT COUNT(*) as count FROM `$selected_table`");
-            $count = $count_result->fetch_assoc()['count'];
+            $stmt = $pdo->query("SELECT COUNT(*) as count FROM `$selected_table`");
+            $count = $stmt->fetchColumn();
             
             // 컬럼 정보 조회
-            $columns_result = $conn->query("SHOW COLUMNS FROM `$selected_table`");
-            $columns = [];
-            while ($col = $columns_result->fetch_assoc()) {
-                $columns[] = $col;
-            }
+            $stmt = $pdo->query("SHOW COLUMNS FROM `$selected_table`");
+            $columns = $stmt->fetchAll();
             ?>
             
             <div class="info">
@@ -105,8 +83,8 @@
             
             <h3>데이터 (최근 5000개)</h3>
             <?php
-            $data_result = $conn->query("SELECT * FROM `$selected_table` ORDER BY 1 DESC LIMIT 5000");
-            if ($data_result && $data_result->num_rows > 0):
+            $stmt = $pdo->query("SELECT * FROM `$selected_table` ORDER BY 1 DESC LIMIT 5000");
+            if ($stmt->rowCount() > 0):
             ?>
                 <table>
                     <tr>
@@ -114,7 +92,7 @@
                             <th><?= htmlspecialchars($col['Field']) ?></th>
                         <?php endforeach; ?>
                     </tr>
-                    <?php while ($row = $data_result->fetch_assoc()): ?>
+                    <?php while ($row = $stmt->fetch()): ?>
                         <tr>
                             <?php foreach ($columns as $col): ?>
                                 <td><?= htmlspecialchars($row[$col['Field']] ?? '') ?></td>
@@ -127,7 +105,7 @@
             <?php endif; ?>
         <?php endif; ?>
         
-        <?php $conn->close(); ?>
+        <?php // PDO는 스크립트 종료 시 자동으로 연결을 닫습니다. ?>
     </div>
 </body>
 </html>

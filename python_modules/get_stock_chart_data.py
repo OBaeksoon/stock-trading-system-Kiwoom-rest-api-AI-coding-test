@@ -4,7 +4,12 @@ import logging
 import os
 import configparser
 import pandas as pd
-from kiwoom_api import KiwoomAPI, logger
+from utils.db_utils import get_db_connection
+from kiwoom_api import KiwoomAPI
+
+# --- 로그 설정 ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def calculate_moving_averages(df):
     """Pandas를 사용하여 이동평균선을 계산합니다."""
@@ -91,11 +96,55 @@ def get_chart_data_from_api(stock_code, chart_type):
         # NaN 값을 None으로 변환하여 JSON 호환성 확보
         df = df.astype(object).where(pd.notnull(df), None)
         
-        return json.dumps(df.to_dict('records'))
+        return df.to_dict('records')
             
     except Exception as e:
         logger.error(f"데이터 처리 중 오류 발생: {e}", exc_info=True)
-        return json.dumps({"error": f"데이터 처리 중 심각한 오류 발생: {e}"})
+        return {"error": f"데이터 처리 중 심각한 오류 발생: {e}"}
+
+def save_chart_data_to_db(stock_code, chart_type, chart_data):
+    """차트 데이터를 데이터베이스에 저장합니다."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            logger.error("DB 연결을 가져올 수 없습니다.")
+            return False
+        
+        cursor = conn.cursor()
+        
+        # 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_chart_data (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                stock_code VARCHAR(10) NOT NULL,
+                chart_type VARCHAR(10) NOT NULL,
+                chart_data JSON,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY (stock_code, chart_type)
+            )
+        """)
+        
+        # 데이터 저장
+        json_data = json.dumps(chart_data)
+        insert_query = """
+            INSERT INTO stock_chart_data (stock_code, chart_type, chart_data)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE chart_data = VALUES(chart_data)
+        """
+        cursor.execute(insert_query, (stock_code, chart_type, json_data))
+        conn.commit()
+        logger.info(f"{stock_code} ({chart_type}) 차트 데이터가 DB에 저장되었습니다.")
+        return True
+    except Exception as e:
+        logger.error(f"DB 저장 중 오류 발생: {e}", exc_info=True)
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
     # pandas 라이브러리 확인
@@ -118,5 +167,12 @@ if __name__ == "__main__":
         sys.exit(1)
     
     # 메인 함수 실행 및 결과 출력
-    result_json = get_chart_data_from_api(stock_code_arg, chart_type_arg)
-    print(result_json)
+    result_data = get_chart_data_from_api(stock_code_arg, chart_type_arg)
+    
+    if isinstance(result_data, dict) and 'error' in result_data:
+        print(json.dumps(result_data))
+    else:
+        # DB에 저장
+        save_chart_data_to_db(stock_code_arg, chart_type_arg, result_data)
+        # 기존과 같이 stdout으로도 출력
+        print(json.dumps(result_data))
