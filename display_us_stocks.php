@@ -52,9 +52,7 @@
         // 로그 파일 경로 설정
         define('LOG_FILE', __DIR__ . '/../logs/display_us_stocks.log');
 
-        function write_log($message) {
-            error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
-        }
+        require_once __DIR__ . '/includes/log_utils.php';
 
         write_log("display_us_stocks.php 스크립트 시작");
 

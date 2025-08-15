@@ -6,9 +6,7 @@ error_reporting(E_ALL);
 // 로그 파일 경로 설정
 define('LOG_FILE', __DIR__ . '/../logs/stock_data_fetcher.log');
 
-function write_log($message) {
-    error_log(date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL, 3, LOG_FILE);
-}
+require_once __DIR__ . '/includes/log_utils.php';
 
 /**
  * 실시간 상승률 상위 30위 종목 데이터를 데이터베이스에서 가져옵니다.
