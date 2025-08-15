@@ -3,32 +3,45 @@ import pandas as pd
 import json
 import warnings
 import requests
-import re
-import configparser
-import os
-import mysql.connector
 from bs4 import BeautifulSoup
 from urllib.parse import quote
-import logging # logging 모듈 추가
+import logging
 
 # --- 로그 설정 ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 웹페이지에서 호출될 때는 파일에 로깅하는 것이 디버깅에 유리합니다.
+log_file_path = os.path.join(os.path.dirname(__file__), '..', 'logs', 'get_us_top_30_stocks.log')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file_path),
+        # logging.StreamHandler() # 필요 시 콘솔 출력 활성화
+    ]
+)
 logger = logging.getLogger(__name__)
 
-# --- 기본 경로 및 설정 ---
 warnings.simplefilter(action='ignore', category=FutureWarning)
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.join(CURRENT_DIR, '..')
-CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.ini')
 
-# --- DB 연결 함수 ---
-from utils.db_utils import get_db_connection
+def get_sp500_tickers():
+    """위키피디아에서 S&P 500 티커 목록을 가져옵니다."""
+    try:
+        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+        sp500_df = pd.read_html(url)[0]
+        tickers = sp500_df['Symbol'].tolist()
+        # 일부 티커가 yfinance에서 인식되지 않는 문제를 해결하기 위해 '.'을 '-'로 변경
+        tickers = [ticker.replace('.', '-') for ticker in tickers]
+        logger.info(f"S&P 500 목록에서 {len(tickers)}개 티커를 가져왔습니다.")
+        return tickers
+    except Exception as e:
+        logger.error(f"S&P 500 목록을 가져오는 데 실패했습니다: {e}")
+        return None
 
-# --- 데이터 가져오기 함수들 ---
 def get_korean_name_from_naver(ticker):
     """네이버 금융에서 티커로 한글 종목명을 조회합니다."""
     try:
-        url = f"https://finance.naver.com/search/search.naver?query={quote(ticker)}"
+        # yfinance 티커 형식(BRK-B)을 네이버 형식(BRK.B)으로 변환
+        search_ticker = ticker.replace('-', '.')
+        url = f"https://finance.naver.com/search/search.naver?query={quote(search_ticker)}"
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=5)
         response.raise_for_status()
@@ -39,222 +52,140 @@ def get_korean_name_from_naver(ticker):
         logger.warning(f"네이버 금융에서 한글 종목명 조회 실패 ({ticker}): {e}")
         return None
 
-def get_major_indices_data():
-    """주요 미국 지수 데이터를 가져옵니다."""
-    logger.info("주요 미국 지수 데이터 조회 시작.")
-    indices = {'^DJI': 'Dow Jones', '^GSPC': 'S&P 500', '^IXIC': 'NASDAQ', '^SOX': 'Philadelphia Semiconductor'}
-    data = yf.download(list(indices.keys()), period="2d", progress=False)
-    index_data = []
-    for ticker, name in indices.items():
-        try:
-            hist = data['Close'][ticker]
-            if len(hist) < 2:
-                logger.warning(f"{name} ({ticker}) 지수 데이터 부족 (최소 2일 필요).")
-                continue
-            prev_close, last_price = hist.iloc[-2], hist.iloc[-1]
-            change = last_price - prev_close
-            percent_change = (change / prev_close) * 100
-            index_data.append((name, ticker, last_price, change, percent_change))
-        except Exception as e:
-            logger.error(f"{name} ({ticker}) 지수 데이터 처리 중 오류 발생: {e}")
-            continue
-    logger.info(f"주요 미국 지수 데이터 조회 완료. 총 {len(index_data)}개 지수.")
-    return index_data
-
-def get_top_30_us_stocks_data():
-    """S&P 500 종목의 등락률을 직접 계산하여 상승률 상위 30개 데이터를 반환합니다."""
-    logger.info("S&P 500 상승률 상위 30개 종목 데이터 조회 시작.")
-    try:
-        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-        sp500_df = pd.read_html(url)[0]
-        tickers = sp500_df['Symbol'].tolist()
-        logger.info(f"S&P 500 목록에서 {len(tickers)}개 티커를 가져왔습니다.")
-    except Exception as e:
-        logger.error(f"S&P 500 목록을 가져오는 데 실패했습니다: {e}")
-        return []
-
+def get_top_gainers(tickers, count=30):
+    """S&P 500 종목 중 상승률 상위 종목 데이터를 반환합니다."""
+    logger.info(f"상승률 상위 {count}개 종목 데이터 조회 시작.")
     try:
         data = yf.download(tickers, period="2d", progress=False, threads=True)
-        if data.empty:
-            logger.warning("yfinance에서 데이터를 다운로드하지 못했습니다.")
+        if data.empty or len(data['Close']) < 2:
+            logger.warning("상승률 계산에 필요한 충분한 데이터를 다운로드하지 못했습니다.")
             return []
 
         close_prices = data['Close']
-        if len(close_prices) < 2:
-            logger.warning("계산에 필요한 충분한 데이터가 없습니다 (최소 2일 필요).")
-            return []
-            
         prev_close = close_prices.iloc[-2]
         last_price = close_prices.iloc[-1]
         
         percent_change = ((last_price - prev_close) / prev_close) * 100
-        change = last_price - prev_close
-
+        
         results_df = pd.DataFrame({
             'ticker': last_price.index,
             'last_price': last_price.values,
-            'change': change.values,
             'percent_change': percent_change.values
         })
         
         results_df.dropna(inplace=True)
-        top_30_gainers = results_df.sort_values(by='percent_change', ascending=False).head(30)
+        top_gainers = results_df.sort_values(by='percent_change', ascending=False).head(count)
 
-        top_30_tickers = top_30_gainers['ticker'].tolist()
-        yf_tickers = yf.Tickers(top_30_tickers)
-        
-        company_names = []
-        themes = []
-        for ticker in top_30_tickers:
+        # 상세 정보 추가
+        detailed_gainers = []
+        for index, row in top_gainers.iterrows():
             try:
-                info = yf_tickers.tickers[ticker].info
-                korean_name = get_korean_name_from_naver(ticker)
-                company_names.append(korean_name or info.get('shortName', 'N/A'))
-                themes.append(info.get('sector', 'N/A'))
+                ticker_info = yf.Ticker(row['ticker']).info
+                korean_name = get_korean_name_from_naver(row['ticker'])
+                detailed_gainers.append({
+                    "ticker": row['ticker'],
+                    "company_name": korean_name or ticker_info.get('shortName', 'N/A'),
+                    "theme": ticker_info.get('sector', 'N/A'),
+                    "last_price": row['last_price'],
+                    "percent_change": row['percent_change']
+                })
             except Exception as e:
-                logger.warning(f"티커 {ticker}의 회사명/테마 정보 조회 실패: {e}")
-                company_names.append('N/A')
-                themes.append('N/A')
-
-        top_30_gainers['company_name'] = company_names
-        top_30_gainers['theme'] = themes
-
-        final_data = [
-            tuple(x) for x in top_30_gainers[[ 
-                'ticker', 'company_name', 'theme', 'last_price', 'change', 'percent_change'
-            ]].to_numpy()
-        ]
-        logger.info(f"S&P 500 상승률 상위 30개 종목 데이터 조회 완료. 총 {len(final_data)}개 종목.")
-        return final_data
+                logger.warning(f"상승률 상위 종목 {row['ticker']}의 상세 정보 조회 실패: {e}")
+                continue
+        
+        logger.info(f"상승률 상위 {len(detailed_gainers)}개 종목 데이터 조회 완료.")
+        return detailed_gainers
 
     except Exception as e:
         logger.error(f"상승률 상위 종목 데이터 처리 중 오류 발생: {e}")
         return []
 
-def get_top_10_market_cap_stocks():
-    """
-    미국 주식 시장에서 시가총액 상위 10개 종목을 조회합니다.
-    (S&P 500 목록을 기반으로 하거나, 더 넓은 범위의 티커를 사용해야 할 수 있습니다.)
-    여기서는 S&P 500 목록을 재활용하여 시가총액 정보를 가져옵니다.
-    """
-    logger.info("시가총액 상위 10개 종목 조회 시작.")
+def get_top_market_cap(tickers, count=10):
+    """S&P 500 종목 중 시가총액 상위 종목 데이터를 반환합니다."""
+    logger.info(f"시가총액 상위 {count}개 종목 데이터 조회 시작.")
+    market_cap_data = []
+    
     try:
-        url = 'https://en.wikipedia.org/wiki/List_of_S%26P%20500_companies'
-        sp500_df = pd.read_html(url)[0]
-        tickers = sp500_df['Symbol'].tolist()
-        logger.info(f"S&P 500 목록에서 {len(tickers)}개 티커를 가져와 시가총액 조회.")
+        # yfinance의 Tickers 객체를 사용하여 여러 티커의 정보를 효율적으로 가져옵니다.
+        yf_tickers = yf.Tickers(tickers)
+        
+        for ticker_symbol in yf_tickers.tickers:
+            try:
+                info = yf_tickers.tickers[ticker_symbol].info
+                market_cap = info.get('marketCap')
+                
+                if market_cap:
+                    market_cap_data.append({
+                        'ticker': ticker_symbol,
+                        'info': info,
+                        'market_cap': market_cap
+                    })
+            except Exception:
+                logger.debug(f"티커 {ticker_symbol}의 기본 정보 조회 실패. 건너뜁니다.")
+                continue
+        
+        # 시가총액 기준으로 정렬하고 상위 10개 선택
+        top_stocks = sorted(market_cap_data, key=lambda x: x['market_cap'], reverse=True)[:count]
+        
+        # 가격 정보 추가
+        top_tickers = [stock['ticker'] for stock in top_stocks]
+        price_data = yf.download(top_tickers, period="2d", progress=False)
+        
+        detailed_market_cap = []
+        for stock in top_stocks:
+            try:
+                ticker = stock['ticker']
+                info = stock['info']
+                
+                prev_close = price_data['Close'][ticker].iloc[-2]
+                last_price = price_data['Close'][ticker].iloc[-1]
+                percent_change = ((last_price - prev_close) / prev_close) * 100
+                
+                korean_name = get_korean_name_from_naver(ticker)
+                
+                detailed_market_cap.append({
+                    "ticker": ticker,
+                    "company_name": korean_name or info.get('shortName', 'N/A'),
+                    "market_cap": stock['market_cap'],
+                    "last_price": last_price,
+                    "percent_change": percent_change
+                })
+            except Exception as e:
+                logger.warning(f"시가총액 상위 종목 {stock['ticker']}의 가격 정보 추가 실패: {e}")
+                continue
+
+        logger.info(f"시가총액 상위 {len(detailed_market_cap)}개 종목 데이터 조회 완료.")
+        return detailed_market_cap
+
     except Exception as e:
-        logger.error(f"S&P 500 목록을 가져오는 데 실패했습니다: {e}")
+        logger.error(f"시가총액 상위 종목 데이터 처리 중 오류 발생: {e}")
         return []
 
-    market_cap_data = []
-    # yfinance의 Tickers 객체를 사용하여 여러 티커의 정보를 한 번에 가져옵니다.
-    yf_tickers = yf.Tickers(tickers)
-
-    for ticker_symbol in tickers:
-        try:
-            ticker_info = yf_tickers.tickers[ticker_symbol].info
-            market_cap = ticker_info.get('marketCap')
-            short_name = ticker_info.get('shortName')
-            
-            if market_cap and short_name:
-                market_cap_data.append({
-                    'ticker': ticker_symbol,
-                    'company_name': short_name,
-                    'market_cap': market_cap
-                })
-        except Exception as e:
-            logger.debug(f"티커 {ticker_symbol}의 시가총액 정보 조회 실패: {e}")
-            continue
-    
-    # 시가총액 기준으로 정렬하고 상위 10개 선택
-    top_10_market_cap = sorted(market_cap_data, key=lambda x: x['market_cap'], reverse=True)[:10]
-    
-    logger.info(f"시가총액 상위 10개 종목 조회 완료. 총 {len(top_10_market_cap)}개 종목.")
-    return top_10_market_cap
-
-
-# --- 데이터베이스 저장 함수 ---
-def save_data_to_db(indices_data, top_stocks_data):
-    conn = get_db_connection()
-    if not conn:
-        logger.error("DB 연결을 가져올 수 없습니다. 데이터베이스 저장을 건너뜁니다.")
-        return
-    
-    cursor = conn.cursor()
-    try:
-        if indices_data:
-            logger.info("Updating US indices...")
-            cursor.execute("TRUNCATE TABLE us_indices")
-            sql = "INSERT INTO us_indices (name, ticker, last_price, change_val, percent_change) VALUES (%s, %s, %s, %s, %s)"
-            cursor.executemany(sql, indices_data)
-            logger.info(f"{cursor.rowcount} rows inserted into us_indices.")
-
-        if top_stocks_data:
-            logger.info("Updating US top stocks with Korean names and themes...")
-            cursor.execute("TRUNCATE TABLE us_top_stocks")
-            sql = "INSERT INTO us_top_stocks (ticker, company_name, theme, last_price, change_val, percent_change) VALUES (%s, %s, %s, %s, %s, %s)"
-            cursor.executemany(sql, top_stocks_data)
-            logger.info(f"{cursor.rowcount} rows inserted into us_top_stocks.")
-            
-        conn.commit()
-        logger.info("Database update complete.")
-    except mysql.connector.Error as err:
-        logger.error(f"Database error during save: {err}")
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-
-def save_top_market_cap_stocks_to_db(market_cap_data):
-    """시가총액 상위 종목 데이터를 데이터베이스에 저장합니다."""
-    conn = get_db_connection()
-    if not conn:
-        logger.error("DB 연결을 가져올 수 없습니다. 시가총액 데이터 저장을 건너뜁니다.")
-        return
-
-    cursor = conn.cursor()
-    try:
-        logger.info("Updating US top market cap stocks...")
-        cursor.execute("TRUNCATE TABLE us_top_market_cap_stocks")
-        sql = "INSERT INTO us_top_market_cap_stocks (ticker, company_name, market_cap) VALUES (%s, %s, %s)"
-        
-        # 데이터를 튜플 리스트로 변환
-        data_to_insert = [(d['ticker'], d['company_name'], d['market_cap']) for d in market_cap_data]
-        
-        cursor.executemany(sql, data_to_insert)
-        conn.commit()
-        logger.info(f"{cursor.rowcount} rows inserted into us_top_market_cap_stocks.")
-    except mysql.connector.Error as err:
-        logger.error(f"Database error during market cap save: {err}")
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-
-
 def main():
-    logger.info("Fetching US stock data...")
+    """
+    미국 주식 시장의 상승률 상위 30개 종목과 시가총액 상위 10개 종목 정보를 조회하여
+    JSON 형식으로 출력합니다.
+    """
+    logger.info("미국 주식 데이터 조회를 시작합니다.")
     
-    # 시가총액 상위 10개 종목 조회 및 출력
-    top_10_market_cap = get_top_10_market_cap_stocks()
-    if top_10_market_cap:
-        logger.info("\n--- 시가총액 상위 10개 종목 ---")
-        for i, stock in enumerate(top_10_market_cap):
-            logger.info(f"{i+1}. {stock['company_name']} ({stock['ticker']}): 시가총액 {stock['market_cap']:,}")
-        save_top_market_cap_stocks_to_db(top_10_market_cap) # DB에 저장
-    else:
-        logger.warning("시가총액 상위 10개 종목을 가져오지 못했습니다.")
-
-    indices_data = get_major_indices_data()
-    top_stocks_data = get_top_30_us_stocks_data()
-    
-    if not indices_data and not top_stocks_data:
-        logger.warning("Failed to fetch any data. Exiting.")
+    sp500_tickers = get_sp500_tickers()
+    if not sp500_tickers:
+        print(json.dumps({"error": "S&P 500 티커 목록을 가져올 수 없습니다."}))
         return
 
-    save_data_to_db(indices_data, top_stocks_data)
-    logger.info("US stock data fetching and saving process completed.")
+    top_gainers_data = get_top_gainers(sp500_tickers, 30)
+    top_market_cap_data = get_top_market_cap(sp500_tickers, 10)
+    
+    final_output = {
+        "top_gainers": top_gainers_data,
+        "top_market_cap": top_market_cap_data
+    }
+    
+    # PHP에서 쉽게 사용할 수 있도록 JSON으로 출력
+    print(json.dumps(final_output, indent=4))
+    logger.info("미국 주식 데이터 조회를 완료하고 결과를 출력했습니다.")
 
 if __name__ == "__main__":
+    # 웹페이지에서 직접 호출될 것을 대비하여, 불필요한 os, configparser 등의 모듈 임포트 제거
+    import os
     main()
